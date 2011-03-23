@@ -23,9 +23,22 @@ import android.util.Log;
 
 public class RootTools {
 
-	protected static String TAG = "Rooted Dev Tools";
+	//--------------------
+	//# Public Variables #
+	//--------------------
+
+	
+	//----------------------
+	//# Internal Variables #
+	//----------------------
+
+	protected static String TAG = "RootTools";
 	protected static boolean accessGiven = false;
 
+	//------------------
+	//# Public Methods #
+	//------------------
+	
 	/**
 	 * This will launch the Android market looking for BusyBox
 	 * 
@@ -265,9 +278,7 @@ public class RootTools {
 		String line = reader.readLine();
 
 		while (line != null) {
-			
 			response.add(reader.readLine());
-
 		}
 		
 		process.waitFor();
@@ -341,7 +352,6 @@ public class RootTools {
 	    final boolean isMountMode = mountPoint.flags.contains(mountType);
 
 	    if ( isMountMode ) {
-
 	        doExec( String.format( "mount -o remount,%s %s %s",mountType, mountPoint.device.getAbsolutePath(), mountPoint.mountPoint.getAbsolutePath() ) );
 
 	        mountPoint = findMountPointRecursive(file);
@@ -361,53 +371,53 @@ public class RootTools {
         final Set<String> flags;
 
         Mount(File device, File path, String type, String flagsStr) {
-                this.device = device;
-                this.mountPoint = path;
-                this.type = type;
-                this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
+            this.device = device;
+            this.mountPoint = path;
+            this.type = type;
+            this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
         }
 
         @Override
         public String toString() {
-                return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
+            return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
         }
     }
 
 	protected static Mount findMountPointRecursive(String file) {
-        try
-        {
-                ArrayList<Mount> mounts = getMounts();
-                for( File path = new File(file); path != null; )
-                        for(Mount mount : mounts )
-                                if ( mount.mountPoint.equals( path ) )
-                                        return mount;
-                return null;
+        try {
+            ArrayList<Mount> mounts = getMounts();
+            for( File path = new File(file); path != null; )
+                for(Mount mount : mounts ) {
+                	if ( mount.mountPoint.equals( path )) {
+                		return mount;
+                	}
+                }
+            return null;
         }
         catch (IOException e) {
-                throw new RuntimeException( e );
+            throw new RuntimeException( e );
         }
 	}
 
 	protected static ArrayList<Mount> getMounts() throws FileNotFoundException, IOException {
         LineNumberReader lnr = null;
         try {
-                lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
-                String line;
-                ArrayList<Mount> mounts = new ArrayList<Mount>();
-                while( (line = lnr.readLine()) != null ){
-                        String[] fields = line.split(" ");
-                        mounts.add( new Mount(
-                                        new File(fields[0]), // device
-                                        new File(fields[1]), // mountPoint
-                                        fields[2], // fstype
-                                        fields[3] // flags
-                        ) );
-                }
-                return mounts;
+            lnr = new LineNumberReader( new FileReader( "/proc/mounts" ) );
+            String line;
+            ArrayList<Mount> mounts = new ArrayList<Mount>();
+            while( (line = lnr.readLine()) != null ){
+                String[] fields = line.split(" ");
+                mounts.add( new Mount(
+                    new File(fields[0]), // device
+                    new File(fields[1]), // mountPoint
+                    fields[2], // fstype
+                    fields[3] // flags
+                ) );
+            }
+            return mounts;
         }
-        finally
-        {
-                //no need to do anything here. 
+        finally {
+            //no need to do anything here. 
         }
 	}
 
