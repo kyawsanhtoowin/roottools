@@ -35,7 +35,7 @@ public class RootTools {
 	 */
 	public static void offerBusyBox(Activity activity) {
 		Log.i(TAG, "Launching Market for BusyBox");
-		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:com.stericson.busybox"));
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:stericson.busybox"));
 		activity.startActivity(i);
 	}
 
@@ -50,7 +50,7 @@ public class RootTools {
 	 */
 	public static Intent offerBusyBox(Activity activity, int requestCode) {
 		Log.i(TAG, "Launching Market for BusyBox");
-		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:com.stericson.busybox"));
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:stericson.busybox"));
 		activity.startActivityForResult(i, requestCode);
 		return i;
 	}
