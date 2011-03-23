@@ -35,7 +35,7 @@ public class RootTools {
 	 */
 	public static void offerBusyBox(Activity activity) {
 		Log.i(TAG, "Launching Market for BusyBox");
-		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:stericson.busybox"));
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
 		activity.startActivity(i);
 	}
 
@@ -50,7 +50,7 @@ public class RootTools {
 	 */
 	public static Intent offerBusyBox(Activity activity, int requestCode) {
 		Log.i(TAG, "Launching Market for BusyBox");
-		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:stericson.busybox"));
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
 		activity.startActivityForResult(i, requestCode);
 		return i;
 	}
@@ -64,7 +64,7 @@ public class RootTools {
 	 */
 	public static void offerSuperUser(Activity activity) {
 		Log.i(TAG, "Launching Market for SuperUser");
-		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:com.noshufou.android.su"));
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
 		activity.startActivity(i);
 	}
 
@@ -79,7 +79,7 @@ public class RootTools {
 	 */
 	public static Intent offerSuperUser(Activity activity, int requestCode) {
 		Log.i(TAG, "Launching Market for SuperUser");
-		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:com.noshufou.android.su"));
+		Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
 		activity.startActivityForResult(i, requestCode);
 		return i;
 	}
