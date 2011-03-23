@@ -415,8 +415,7 @@ public class RootTools {
     //# Internal methods #
     //--------------------
 	
-	@SuppressWarnings("finally")
-    protected static boolean doExec(String command) {
+    protected static void doExec(String command) {
         Process process = null;
         DataOutputStream os = null;
         InputStreamReader osRes = null;
@@ -450,17 +449,14 @@ public class RootTools {
                     }
                 }
             }
-                
-                System.out.println("BusyBox Shell Output " + line);
-                line = reader.readLine();
             
+			line = reader.readLine();
             process.waitFor();
 
         } catch (Exception e) {
             Log.d(TAG,
-                    "Unexpected error - Here is what I know: " + e.getMessage());
+                    "Error: " + e.getMessage());
             e.printStackTrace();
-            return false;
         } finally {
             try {
                 if (os != null) {
@@ -472,10 +468,9 @@ public class RootTools {
                 process.destroy();
             } catch (Exception e) {
                 Log.d(TAG,
-                        "Unexpected error - Here is what I know: " + e.getMessage());
+                        "Error: " + e.getMessage());
                 e.printStackTrace();
             }
-            return true;
         }
     }
 }
