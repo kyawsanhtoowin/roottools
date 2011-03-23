@@ -122,14 +122,14 @@ public class RootTools {
 		Log.i(TAG, "Checking for BusyBox");
 		File tmpDir = new File("/data/local/tmp");
 		if (!tmpDir.exists()) {
-		    doExec("mkdir /data/local/tmp");
+		    doExec(new String[] { "mkdir /data/local/tmp" });
 		}
 		Set<String> tmpSet = new HashSet<String>();
 		//Try to read from the file.
         LineNumberReader lnr = null;
         try {
-            sendShell(new String[] { "cp /init.rc /data/local/tmp",
-                    "chmod 0777 /data/local/tmp/init.rc"}, 0);
+            doExec(new String[] { "cp /init.rc /data/local/tmp",
+                    "chmod 0777 /data/local/tmp/init.rc"});
 	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
 	        String line;
 	        while( (line = lnr.readLine()) != null ){
@@ -159,8 +159,7 @@ public class RootTools {
 	public static boolean accessGiven() {
 		Log.i(TAG, "Checking for Root access");
 		accessGiven = false;
-		String command = "id";
-		doExec(command);
+		doExec(new String[] { "id" });
 		
 		if (accessGiven) {
 			return true;
@@ -357,8 +356,7 @@ public class RootTools {
 	    final boolean isMountMode = mountPoint.flags.contains(mountType);
 
 	    if ( isMountMode ) {
-	        doExec( String.format( "mount -o remount,%s %s %s",mountType, mountPoint.device.getAbsolutePath(), mountPoint.mountPoint.getAbsolutePath() ) );
-
+	        doExec(new String[] { String.format( "mount -o remount,%s %s %s",mountType, mountPoint.device.getAbsolutePath(), mountPoint.mountPoint.getAbsolutePath() ) });
 	        mountPoint = findMountPointRecursive(file);
 	    } 
 	    
@@ -430,7 +428,7 @@ public class RootTools {
     //# Internal methods #
     //--------------------
 	
-    protected static void doExec(String command) {
+    protected static void doExec(String[] commands) {
         Process process = null;
         DataOutputStream os = null;
         InputStreamReader osRes = null;
@@ -441,8 +439,12 @@ public class RootTools {
             osRes = new InputStreamReader(process.getInputStream());
             BufferedReader reader = new BufferedReader(osRes);
 
-            os.writeBytes(command + "\n");
-            os.flush();
+    		// Doing Stuff ;)
+    		for (String single : commands) {
+    			os.writeBytes(single + "\n");
+    			os.flush();
+    		}
+
 
             os.writeBytes("exit \n");
             os.flush();
@@ -450,7 +452,7 @@ public class RootTools {
             String line = reader.readLine();
 
             while (line != null) {
-                if (command.equals("id")) {
+                if (commands[0].equals("id")) {
                     Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
                     for (String id : ID) {
                         if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
