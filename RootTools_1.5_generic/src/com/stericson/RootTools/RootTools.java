@@ -172,70 +172,6 @@ public class RootTools {
 		return (UpdateSize < availableBlocks * blockSize);
 	}
 
-	@SuppressWarnings("finally")
-	protected static boolean doExec(String command) {
-		Process process = null;
-		DataOutputStream os = null;
-		InputStreamReader osRes = null;
-
-		try {
-			process = Runtime.getRuntime().exec("su");
-			os = new DataOutputStream(process.getOutputStream());
-			osRes = new InputStreamReader(process.getInputStream());
-			BufferedReader reader = new BufferedReader(osRes);
-
-			os.writeBytes(command + "\n");
-			os.flush();
-
-			os.writeBytes("exit \n");
-			os.flush();
-			
-			String line = reader.readLine();
-
-			while (line != null) {
-				if (command.equals("id")) {
-					Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-					for (String id : ID) {
-						if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
-							accessGiven = true;
-							Log.i(TAG, "Access Given");
-							break;
-						}
-					}
-					if (!accessGiven) {
-						Log.i(TAG, "Access Denied?");
-					}
-				}
-			}
-				
-				System.out.println("BusyBox Shell Output " + line);
-				line = reader.readLine();
-			
-			process.waitFor();
-
-		} catch (Exception e) {
-			Log.d(TAG,
-					"Unexpected error - Here is what I know: " + e.getMessage());
-			e.printStackTrace();
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (osRes != null) {
-					osRes.close();
-				}
-				process.destroy();
-			} catch (Exception e) {
-				Log.d(TAG,
-						"Unexpected error - Here is what I know: " + e.getMessage());
-				e.printStackTrace();
-			}
-			return true;
-		}
-	}
-	
 	/**
 	 * Sends one shell command as su (attempts to)
 	 * 
@@ -305,7 +241,7 @@ public class RootTools {
 	 * @throws IOException 
 	 * @throws InterruptedException 
 	 */
-	public List<String> sendShell(String[] commands, int sleeptime) throws IOException, InterruptedException {
+	public static List<String> sendShell(String[] commands, int sleeptime) throws IOException, InterruptedException {
 		Log.i(TAG, "Sending some shell commands");
 		List<String> response = new LinkedList<String>();
 		Process process = null;
@@ -474,4 +410,72 @@ public class RootTools {
                 //no need to do anything here. 
         }
 	}
+
+    //--------------------
+    //# Internal methods #
+    //--------------------
+	
+	@SuppressWarnings("finally")
+    protected static boolean doExec(String command) {
+        Process process = null;
+        DataOutputStream os = null;
+        InputStreamReader osRes = null;
+
+        try {
+            process = Runtime.getRuntime().exec("su");
+            os = new DataOutputStream(process.getOutputStream());
+            osRes = new InputStreamReader(process.getInputStream());
+            BufferedReader reader = new BufferedReader(osRes);
+
+            os.writeBytes(command + "\n");
+            os.flush();
+
+            os.writeBytes("exit \n");
+            os.flush();
+            
+            String line = reader.readLine();
+
+            while (line != null) {
+                if (command.equals("id")) {
+                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
+                    for (String id : ID) {
+                        if (id.toLowerCase().contains("uid=") && id.toLowerCase().contains("root")) {
+                            accessGiven = true;
+                            Log.i(TAG, "Access Given");
+                            break;
+                        }
+                    }
+                    if (!accessGiven) {
+                        Log.i(TAG, "Access Denied?");
+                    }
+                }
+            }
+                
+                System.out.println("BusyBox Shell Output " + line);
+                line = reader.readLine();
+            
+            process.waitFor();
+
+        } catch (Exception e) {
+            Log.d(TAG,
+                    "Unexpected error - Here is what I know: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+                if (osRes != null) {
+                    osRes.close();
+                }
+                process.destroy();
+            } catch (Exception e) {
+                Log.d(TAG,
+                        "Unexpected error - Here is what I know: " + e.getMessage());
+                e.printStackTrace();
+            }
+            return true;
+        }
+    }
 }
