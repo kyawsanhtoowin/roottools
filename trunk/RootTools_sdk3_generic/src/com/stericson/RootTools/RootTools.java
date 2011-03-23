@@ -120,12 +120,17 @@ public class RootTools {
 	 */
 	public static boolean busyboxAvailable() {
 		Log.i(TAG, "Checking for BusyBox");
-		doExec("chmod 0777 /init.rc");
+		File tmpDir = new File("/data/local/tmp");
+		if (!tmpDir.exists()) {
+		    doExec("mkdir /data/local/tmp");
+		}
 		Set<String> tmpSet = new HashSet<String>();
 		//Try to read from the file.
         LineNumberReader lnr = null;
         try {
-	        lnr = new LineNumberReader( new FileReader( "/init.rc" ) );
+            sendShell(new String[] { "cp /init.rc /data/local/tmp",
+                    "chmod 0777 /data/local/tmp/init.rc"}, 0);
+	        lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
 	        String line;
 	        while( (line = lnr.readLine()) != null ){
 	        	if (line.contains("export PATH")) {
