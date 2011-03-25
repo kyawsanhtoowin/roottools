@@ -124,4 +124,4 @@ TODOs should include the string TODO in all caps, followed by a colon:
 
 // TODO: Change this to use a flag instead of a constant.
 }}}
-If your TODO is of the form "At a future date do something" make sure that you either include a very specific date ("Fix by November 2005") or a very specific event ("Remove this code after all production mixers understand protocol V7.").
+If your TODO is of the form "At a future date do something" make sure that you either include a very specific date ("Fix by November 2005") or a very specific event ("Remove this code after all production mixers understand protocol V7."). 
