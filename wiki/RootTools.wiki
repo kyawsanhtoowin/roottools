@@ -1,4 +1,5 @@
 #summary What is RootTools?
+#labels Featured
 
 = Introduction =
 
@@ -6,7 +7,6 @@ RootTools is a library that developers can include in their apps to simplify usi
 
   * [Usage#Checking_for_busybox Checking for busybox]
   * [Usage#Checking_for_su Checking for su]
-  * [Usage#Checking_that_your_app_has_root_access Checking that your app has root access]
   * [Usage#Checking_the_SD_Card_for_available_space Checking the SD card for available space]
   * [Usage#Running_root_commands Running root commands]
 
