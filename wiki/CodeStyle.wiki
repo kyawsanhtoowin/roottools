@@ -53,7 +53,7 @@ Pros of #1: Potentially reduces the number of import statements.
 
 Pros of #2: Makes it obvious what classes are actually used. Makes code more readable for maintainers. 
 
-Decision: Use style #2 for importing all Android code. An explicit exception is made for java standard libraries (java.util.*, java.io.*, etc.) and unit test code (junit.framework.*).
+Decision: Use style #2 for importing all Android code. An explicit exception is made for java standard libraries ({{{java.util.*, java.io.*}}}, etc.) and unit test code ({{{junit.framework.*}}}).
 ----
 ==Indentation==
 We use 4 space indents for blocks. We never use tabs. When in doubt, be consistent with code around you.
