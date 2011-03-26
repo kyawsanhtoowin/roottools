@@ -1,0 +1,85 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+Here is an overview of what methods are provided by the RootTools library and how to use them. Everything below is subject to change at any time, and it fact will be changing. This library is constantly evolving and becoming better. When we change things, we will try and make it as pain free for you as possible.
+
+----
+= Checking for busybox =
+
+Busybox is quite possibly the single most useful and versitile tool in the root developer's arsenal. The problem is that not every ROM has busybox installed by default. The RootTools library has a method for checking for busybox. Using it is as simple as:
+
+{{{
+if (RootTools.busyboxAvailable()) {
+    // busybox exists, do something
+} else {
+    // do something else
+}
+}}}
+
+It is recommended that if busybox is not found that you alert the user to this and give them the a way to install it, usually with the [http://market.android.com/details?id=stericson.busybox BusyBox] app from the market. !RootTools provides an easy way to go about this. You have two options:
+{{{
+RootTools.offerBusyBox(activity);
+}}}
+or
+{{{
+Intent intent = RootTools.offerBusyBox(activity, requestCode);
+}}}
+
+The first method simply launches an intent that will bring up the market page for the BusyBox app. The second method does the same thing, except it uses {{{startActivityForResult()}}}, allowing you to get back from the market app what the user did. When using the second method, requestCode is used exactly as it is with {{{startActivityForResult()}}}, and the Intent returned is the Intent returned from the same. Both methods take an Activity as their paramater, this should be the activity that is calling the method.
+----
+= Checking for su =
+
+su is the binary that is used to grant root access. It being on the phone is usually a good sign that the phone is rooted. You can check for the su binary like so:
+
+{{{
+if (RootTools.rootAvailable()) {
+    // su exists, do something
+} else {
+    // do something else
+}
+}}}
+
+Note that this only check that su exists. A more complete check can also be run:
+{{{
+if (RootTools.accessGiven()) {
+    // your app has been granted root access
+}
+}}}
+{{{RootTools.accessGiven()}}} not only checks that a device is rooted, it also calls su for your app, requests permission, and returns true if your app was successfully granted root permissions. This can be used as the first check in your app to make sure that you will be granted access when you need it.
+
+Like BusyBox, !RootTools includes the capability to launch the market for Superuser. Do note that the Superuser app from the market does not have the capability to root a person's device, so it is not the recommended route to go if you find that a device is not rooted. However it can be called exactly the same way that the busybox methods are:
+{{{
+RootTools.offerSuperUser(activity);
+}}}
+or
+{{{
+Intent intent = RootTools.offerSuperuser(activity, requestCode);
+}}}
+----
+= Checking the SD Card for available space =
+
+If you have the need to store things on the SD card, it's usually a good idea to make sure that there's room to hold them. !RootTools has a simple method for doing so:
+{{{
+if (RootTools.EnoughSpaceOnSdCard(updateSize)) {
+    // there's enough space, go ahead
+} else {
+    // not enough space, plan b?
+}
+}}}
+the method takes a long of how much space you need in blocks and returns true if there is enough space, and the SD card is writable.
+----
+= Running root commands =
+!RootTools has two methods for simplifying running root commands. One method for when you need to run a single command, another for when you need to run multiple. They are used as follows:
+{{{
+try {
+    List<String> output = RootTools.sendShell(command);
+
+    String[] commands = new String[] { command1, command2 };
+    List<String> otherOutput = RootTools.sendShell(commands);
+} catch (IOException e) {
+    // something went wrong, deal with it here
+}
+}}}
+
+There is no need to bother with input and output streams as it is all handled for you. Every line that is returned from the shell is returned from sendShell in the List. Also, you don't have to use both, only the one that you need.
