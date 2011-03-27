@@ -5,6 +5,18 @@
 Here is an overview of what methods are provided by the RootTools library and how to use them. Everything below is subject to change at any time, and it fact will be changing. This library is constantly evolving and becoming better. When we change things, we will try and make it as pain free for you as possible.
 
 ----
+
+= Including the Library in Eclipse =
+
+Including the RootTools library into your project so that you can utilize it is simple!
+
+  # In Eclipse, right click your project, navigate to "Build Path", then to "configure build path"
+  # Now choose "add External Jar"
+  # Navigate to the RootTools .jar file you download and choose it.
+  # Finish up by choosing "ok"
+
+That's all there is to it! The library should now be ready for use in your Android project.
+
 = Checking for busybox =
 
 Busybox is quite possibly the single most useful and versitile tool in the root developer's arsenal. The problem is that not every ROM has busybox installed by default. The RootTools library has a method for checking for busybox. Using it is as simple as:
