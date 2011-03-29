@@ -22,7 +22,7 @@ That's all there is to it! The library should now be ready for use in your Andro
 Busybox is quite possibly the single most useful and versitile tool in the root developer's arsenal. The problem is that not every ROM has busybox installed by default. The RootTools library has a method for checking for busybox. Using it is as simple as:
 
 {{{
-if (RootTools.busyboxAvailable()) {
+if (RootTools.isBusyboxAvailable()) {
     // busybox exists, do something
 } else {
     // do something else
@@ -45,7 +45,7 @@ The first method simply launches an intent that will bring up the market page fo
 su is the binary that is used to grant root access. It being on the phone is usually a good sign that the phone is rooted. You can check for the su binary like so:
 
 {{{
-if (RootTools.rootAvailable()) {
+if (RootTools.isRootAvailable()) {
     // su exists, do something
 } else {
     // do something else
@@ -54,11 +54,11 @@ if (RootTools.rootAvailable()) {
 
 Note that this only check that su exists. A more complete check can also be run:
 {{{
-if (RootTools.accessGiven()) {
+if (RootTools.isAccessGiven()) {
     // your app has been granted root access
 }
 }}}
-{{{RootTools.accessGiven()}}} not only checks that a device is rooted, it also calls su for your app, requests permission, and returns true if your app was successfully granted root permissions. This can be used as the first check in your app to make sure that you will be granted access when you need it.
+{{{RootTools.isAccessGiven()}}} not only checks that a device is rooted, it also calls su for your app, requests permission, and returns true if your app was successfully granted root permissions. This can be used as the first check in your app to make sure that you will be granted access when you need it.
 
 Like BusyBox, !RootTools includes the capability to launch the market for Superuser. Do note that the Superuser app from the market does not have the capability to root a person's device, so it is not the recommended route to go if you find that a device is not rooted. However it can be called exactly the same way that the busybox methods are:
 {{{
@@ -73,7 +73,7 @@ Intent intent = RootTools.offerSuperuser(activity, requestCode);
 
 If you have the need to store things on the SD card, it's usually a good idea to make sure that there's room to hold them. !RootTools has a simple method for doing so:
 {{{
-if (RootTools.EnoughSpaceOnSdCard(updateSize)) {
+if (RootTools.hasEnoughSpaceOnSdCard(updateSize)) {
     // there's enough space, go ahead
 } else {
     // not enough space, plan b?
@@ -95,3 +95,48 @@ try {
 }}}
 
 There is no need to bother with input and output streams as it is all handled for you. Every line that is returned from the shell is returned from sendShell in the List. Also, you don't have to use both, only the one that you need.
+
+= The memory-saving way =
+Just like XML files can be parsed by a simple parser or a more "economical" but more complex one, you can run root commands using a simple syntax as specified above, or you can inject a callback object that will use very little memory since it will only need to memorize the current line.
+This method also allows you to stop reading a command's output if, for instance, you find the line you were looking for or an error message:
+{{{
+try {
+    RootTools.Result result = new RootTools.Result() {
+        @Override
+        public void process(String line) throws Exception {
+            // Do something with current line;
+            // Maybe store it using setData()
+        }
+
+        @Override
+        public void onFailure(Exception ex) {
+            // Do something if we failed while trying to run a command or read its output
+            setError(1);
+        }
+
+        @Override
+        public void onComplete(int diag) {
+            // Invoked when we are done reading one or more command's output.
+            // Convenient because we are still within the context of our result object.
+        }
+
+    };
+    RootTools.sendShell(
+        new String[] {
+                command1,
+                command2,
+                command3 },
+        timeout,
+        result
+    );
+    if(0 != result.getError())
+        return;
+    // Do something with getData() if needed.
+} catch (IOException e) {
+    // Handle exception
+} catch (InterruptedException e) {
+    // Handle exception
+} catch (RootTools.RootToolsException e) {
+    // Handle exception. This one would have been raised by the developer.
+}
+}}}
