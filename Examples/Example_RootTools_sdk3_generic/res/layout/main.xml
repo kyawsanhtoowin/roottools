@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/exampleVersion"
+    />
+<Button
+    android:id="@+id/busybox"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/busybox"
+    android:layout_margin="5dip"
+    />
+<Button
+    android:id="@+id/superuser"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/superuser"
+    android:layout_margin="5dip"
+    />
+<Button
+    android:id="@+id/isbusybox"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/isbusybox"
+    android:layout_margin="5dip"
+    />
+<Button
+    android:id="@+id/isRootAvailable"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/isRootAvailable"
+    android:layout_margin="5dip"
+    />
+<Button
+    android:id="@+id/isAccessGiven"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/isAccessGiven"
+    android:layout_margin="5dip"
+    />
+<Button
+    android:id="@+id/hasEnoughSpaceOnSdCard"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/hasEnoughSpaceOnSdCard"
+    android:layout_margin="5dip"
+    />
+</LinearLayout>
