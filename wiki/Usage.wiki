@@ -15,7 +15,7 @@ Including the RootTools library into your project so that you can utilize it is 
   # Navigate to the RootTools .jar file you download and choose it.
   # Finish up by choosing "ok"
 
-That's all there is to it! The library should now be ready for use in your Android project. Now that you have the library included into your Android project all you need to do is import it into the desired java file. You can do this by putting "import com.stericson.RootTools.*" at the top of your java file, right under the package name for your Android app.
+That's all there is to it! The library should now be ready for use in your Android project. Now that you have the library included into your Android project all you need to do is import it into the desired java file. You can do this by putting "*import com.stericson.RootTools.`*`*" at the top of your java file, right under the package name for your Android app.
 
 = Checking for busybox =
 
