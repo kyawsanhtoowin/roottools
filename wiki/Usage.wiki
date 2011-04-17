@@ -21,11 +21,15 @@ That's all there is to it! The library should now be ready for use in your Andro
 
 To turn debug mode on and off, simply do the following in your app:
 
+{{{
 RootTools.debugMode = true; //ON
+}}}
 
 OR
 
+{{{
 RootTools.debugMode = false; //OFF
+}}}
 
 = Using log() =
 
@@ -35,11 +39,15 @@ This method handles whether or not to log the information you pass it depending 
 
 To use the log function you can do the following:
 
+{{{
 RootTools.log("this is a log message); //The TAG for this log will be "RootTools"
+}}}
 
 OR
 
+{{{
 RootTools.log("OurTag", "this is a log message);
+}}}
 
 This method uses log.d since this is intended for debug code.
 
