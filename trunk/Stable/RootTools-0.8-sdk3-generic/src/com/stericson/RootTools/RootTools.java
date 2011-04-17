@@ -1,15 +1,11 @@
 package com.stericson.RootTools;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -32,11 +28,62 @@ public class RootTools {
      *then that functionality should probably be moved to its own class and the call to it done here.
      *For examples of this being done, look at the remount functionality.
      */
-	
+
     //--------------------
     //# Public Variables #
     //--------------------
-
+	
+	public static boolean debugMode = false;
+	
+    //---------------------------
+    //# Public Variable Getters #
+    //---------------------------
+    
+    /**
+     * This will return the environment variable $PATH
+     * 
+     * @return <code>Set<String></code> A Set of Strings representing the environment variable $PATH
+     * 
+     * @throws Exception if we cannot return the $PATH variable
+     */
+    public static Set<String> getPath() throws Exception {
+        if (InternalVariables.path != null) {
+            return InternalVariables.path;	
+        } else {
+            if (InternalMethods.instance().returnPath()) {
+                return InternalVariables.path;	
+            } else {
+                throw new Exception();
+            }
+        }
+    }
+    
+    /**
+     * This will return an ArrayList of the class Mount.
+     * The class mount contains the following property's:
+     *     device
+     *     mountPoint
+     *     type
+     *     flags
+     * 
+     * These will provide you with any information you need to work with the mount points.
+     * 
+     * @return <code>ArrayList<Mount></code> an ArrayList of the class Mount.
+     * 
+     * @throws Exception if we cannot return the mount points.
+     */
+    public static ArrayList<Mount> getMounts() throws Exception {
+        if (InternalVariables.mounts != null) {
+            return InternalVariables.mounts;	
+        } else {
+        	InternalVariables.mounts = InternalMethods.instance().getMounts();
+        	if (InternalVariables.mounts != null) {
+                return InternalVariables.mounts;	
+            } else {
+                throw new Exception();
+            }
+        }
+    }
 	
     //------------------
     //# Public Methods #
@@ -118,13 +165,15 @@ public class RootTools {
      */
     public static boolean isRootAvailable() {
         Log.i(InternalVariables.TAG, "Checking for Root binary");
-        String[] places = { "/system/bin/", "/system/xbin/",
+        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
                 "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
         for (String where : places) {
             File file = new File(where + "su");
             if (file.exists()) {
+                log("Root was found here: " + where);
                 return true;
             }
+            log("Root was NOT found here: " + where);
         }
         return false;
     }
@@ -144,34 +193,20 @@ public class RootTools {
      */
     public static boolean isBusyboxAvailable() {
         Log.i(InternalVariables.TAG, "Checking for BusyBox");
-        File tmpDir = new File("/data/local/tmp");
-        if (!tmpDir.exists()) {
-            InternalMethods.instance().doExec(new String[]{"mkdir /data/local/tmp"});
-        }
-        Set<String> tmpSet = new HashSet<String>();
-        //Try to read from the file.
-        LineNumberReader lnr = null;
         try {
-            InternalMethods.instance().doExec(new String[]{"dd if=/init.rc of=/data/local/tmp/init.rc",
-                    "chmod 0777 /data/local/tmp/init.rc"});
-            lnr = new LineNumberReader( new FileReader( "/data/local/tmp/init.rc" ) );
-            String line;
-            while( (line = lnr.readLine()) != null ){
-                if (line.contains("export PATH")) {
-                    int tmp = line.indexOf("/");
-                    tmpSet = new HashSet<String>(Arrays.asList(line.substring(tmp).split(":")));
-                    for(String paths : tmpSet) {
-                        File file = new File(paths + "/busybox");
-                        if (file.exists()) {
-                            Log.i(InternalVariables.TAG, "Found BusyBox!");
-                            return true;
-                        }
-                    }
+            for(String paths : getPath()) {
+                File file = new File(paths + "/busybox");
+                if (file.exists()) {
+                    log("Found BusyBox here: " + paths);
+                    return true;
                 }
+                log("BusyBox was NOT found here: " + paths);
             }
         } catch (Exception e) {
-            Log.i(InternalVariables.TAG, "BusyBox was not found, some error happened!");
-            e.printStackTrace();
+            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
+            if (debugMode) {
+            	e.printStackTrace();
+            }
             return false;
         }
         return false;
@@ -291,6 +326,9 @@ public class RootTools {
             installer = new Installer(context);
         }
         catch(IOException ex) {
+        	if (debugMode) {
+        		ex.printStackTrace();
+        	}
             return false;
         }
 
@@ -406,6 +444,64 @@ public class RootTools {
             throws IOException, InterruptedException, RootToolsException {
         return sendShell(command, null);
     }
+
+    /**
+     * Get the space for a desired partition.
+     *
+     * @param path   The partition to find the space for.
+     *
+     * @return          the amount if space found within the desired partition.
+     *                  If the space was not found then the string is -1
+     *
+     */
+    public static int getSpace(String path) {
+		InternalVariables.getSpaceFor = path;
+		boolean found = false;
+		String[] commands = { "df" };
+		InternalMethods.instance().doExec(commands);
+		
+		for (String spaceSearch : InternalVariables.space) {
+			if (found) {
+				String space = spaceSearch.substring(0,
+						spaceSearch.length() - 1);
+				return Integer.parseInt(space.trim());
+			}
+			else if (spaceSearch.equals("used,")) {
+				found = true;
+			}
+		}
+		return -1;
+	}
+	
+    /**
+     * This method allows you to output debug messages only when debugging is on.
+     * This will allow you to add a debug option to your app, which by default can be
+     * left off for performance. However, when you need debugging information, a simple
+     * switch can enable it and provide you with detailed logging.
+     * 
+     * This method handles whether or not to log the information you pass it depending
+     * whether or not RootTools.debugMode is on. So you can use this and not have to
+     * worry about handling it yourself.
+     *
+     * @param TAG   Optional parameter to define the tag that the Log will use.
+     * 
+     * @param msg   The message to output.
+     *
+     *
+     */
+	public static void log(String msg) {
+		log(null, msg);
+	}
+
+    public static void log(String TAG, String msg) {
+		if (debugMode) {
+			if (TAG != null) { 
+				Log.d(TAG, msg);
+			} else {
+				Log.d(InternalVariables.TAG, msg);
+			}
+		}
+	}
 
     public static abstract class Result implements IResult {
         private Process         process = null;
