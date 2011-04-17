@@ -17,6 +17,32 @@ Including the RootTools library into your project so that you can utilize it is 
 
 That's all there is to it! The library should now be ready for use in your Android project. Now that you have the library included into your Android project all you need to do is import it into the desired java file. You can do this by putting "*import com.stericson.RootTools.`*`*" at the top of your java file, right under the package name for your Android app.
 
+= Setting Debug Mode =
+
+To turn debug mode on and off, simply do the following in your app:
+
+RootTools.debugMode = true; //ON
+
+OR
+
+RootTools.debugMode = false; //OFF
+
+= Using log() =
+
+This method allows you to output debug messages only when debug mode is on. This will allow you to add a debug option to your app, which by default can be left off for performance. However, when you need debugging information, a simple switch can enable it and provide you with detailed logging.
+
+This method handles whether or not to log the information you pass it depending whether or not RootTools.debugMode is on. So you can use this and not have to worry about handling it yourself.
+
+To use the log function you can do the following:
+
+RootTools.log("this is a log message); //The TAG for this log will be "RootTools"
+
+OR
+
+RootTools.log("OurTag", "this is a log message);
+
+This method uses log.d since this is intended for debug code.
+
 = Checking for busybox =
 
 Busybox is quite possibly the single most useful and versitile tool in the root developer's arsenal. The problem is that not every ROM has busybox installed by default. The RootTools library has a method for checking for busybox. Using it is as simple as:
