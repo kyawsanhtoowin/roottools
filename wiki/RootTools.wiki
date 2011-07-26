@@ -14,7 +14,7 @@ The library is under constant work and we are always looking for new ways to hel
 
 == History ==
 
-The project was started by Stericson (of MetaMorph fame) after a conversation with ChainsDD (of Superuser fame) about not having a good simple way to use root. Stericson had the first draft of the library written in a few short hours and passed it to ChainsDD for review. It was decided from the start that this would be a community project, by the community and for the community.
+The project was started by Stericson (of MetaMorph fame) after a conversation with ChainsDD (of Superuser fame) about not having a good simple way to use root. Stericson had the first draft of the library written in a few short hours and passed it to ChainsDD for review. Shortly after pushing the code to Subversion, Cyansmoker (of NotEnoughSpace fame) joined in, refactored the code  and added memory optimizations. It was decided from the start that this would be a community project, by the community and for the community. 
 
 == Future ==
 
