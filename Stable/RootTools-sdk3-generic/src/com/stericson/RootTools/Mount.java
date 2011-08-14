@@ -5,11 +5,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-class Mount {
-    final File device;
-    final File mountPoint;
-    final String type;
-    final Set<String> flags;
+public class Mount {
+    public final File device;
+    public final File mountPoint;
+    public final String type;
+    public final Set<String> flags;
 
     Mount(File device, File path, String type, String flagsStr) {
         this.device = device;
