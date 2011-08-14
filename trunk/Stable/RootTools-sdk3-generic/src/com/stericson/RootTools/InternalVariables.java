@@ -12,10 +12,11 @@ class InternalVariables {
     //----------------------
 	
     //Version numbers should be maintained here.
-    protected static String TAG = "RootTools v0.9";
+    protected static String TAG = "RootTools v0.9.1";
     protected static boolean accessGiven = false;
     protected static String[] space;
     protected static String getSpaceFor;
+    protected static String busyboxVersion;
     protected static Set<String> path;
     protected static ArrayList<Mount> mounts;
 
