@@ -174,7 +174,11 @@ public class RootTools {
     }
 
     /**
+     * 
+     * @param binaryName String that represent the binary to find.
+     * 
      * @return  <code>true</code> if the specified binary was found.
+     * 
      */
     public static boolean findBinary(String binaryName) {
         Log.i(InternalVariables.TAG, "Checking for " + binaryName);
@@ -182,10 +186,10 @@ public class RootTools {
 			for(String paths : getPath()) {
 				File file = new File(paths + "/" + binaryName);
 			    if (file.exists()) {
-			        log("Root was found here: " + paths);
+			        log(binaryName + " was found here: " + paths);
 			        return true;
 			    }
-			    log("Root was NOT found here: " + paths);
+			    log(binaryName + " was NOT found here: " + paths);
 			}
 		}  catch (Exception e) {
             Log.i(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
@@ -207,6 +211,46 @@ public class RootTools {
             log(binaryName + " was NOT found here: " + where);
         }
         return false;
+    }
+
+    
+    /**
+     * 
+     * @param file String that represent the file, including the full
+     * path to the file and its name.
+     * 
+     * @return An <code>int</code> detailing the permissions of the file
+     * or -1 if the file could not be found or permissions couldn't be determined.
+     * 
+     */
+    public static int getFilePermissions(String file) {
+        Log.i(InternalVariables.TAG, "Checking permissions for " + file);
+		File f = new File(file);
+	    if (f.exists()) {
+	        log(file + " was found." );
+	        try {
+				for (String line : sendShell("stat -c %a " + file))
+				{
+					int permissions = -1;
+					try 
+					{
+						permissions = Integer.parseInt(line);
+						return permissions;
+					}
+					catch (Exception e)
+					{}
+				}				
+			} catch (Exception e) {
+				log(e.getMessage());
+				return -1;
+			}
+	        
+	        return -1;
+	    }
+	    else
+	    {
+	    	return -1;
+	    }
     }
     
     /**
@@ -498,12 +542,26 @@ public class RootTools {
      * whether or not RootTools.debugMode is on. So you can use this and not have to
      * worry about handling it yourself.
      *
-     * @param TAG Optional parameter to define the tag that the Log will use.
      * @param msg The message to output.
      */
+    
     public static void log(String msg) {
         log(null, msg);
     }
+
+    /**
+     * This method allows you to output debug messages only when debugging is on.
+     * This will allow you to add a debug option to your app, which by default can be
+     * left off for performance. However, when you need debugging information, a simple
+     * switch can enable it and provide you with detailed logging.
+     * <p/>
+     * This method handles whether or not to log the information you pass it depending
+     * whether or not RootTools.debugMode is on. So you can use this and not have to
+     * worry about handling it yourself.
+     *
+     * @param msg The message to output.
+    * @param TAG Optional parameter to define the tag that the Log will use.
+     */
 
     public static void log(String TAG, String msg) {
         if (debugMode) {
