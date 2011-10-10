@@ -150,15 +150,30 @@ public class RootTools {
     }
 
     /**
-     * @return  <code>true</code> if su was found.
+     * @return <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
-    	return findBinary("su");
+        Log.i(InternalVariables.TAG, "Checking for Root binary");
+        try {
+            for (String paths : getPath()) {
+                File file = new File(paths + "/su");
+                if (file.exists()) {
+                    log("Root was found here: " + paths);
+                    return true;
+                }
+                log("Root was NOT found here: " + paths);
+            }
+        } catch (Exception e) {
+            Log.i(InternalVariables.TAG, "Root was not found, more information MAY be available with Debugging on.");
+            if (debugMode) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 
     /**
      * @return <code>true</code> if BusyBox was found
-     * 
      * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
      */
     @Deprecated
@@ -167,92 +182,29 @@ public class RootTools {
     }
 
     /**
-     * @return  <code>true</code> if BusyBox was found.
+     * @return <code>true</code> if BusyBox was found.
      */
     public static boolean isBusyboxAvailable() {
-    	return findBinary("busybox");
-    }
-
-    /**
-     * 
-     * @param binaryName String that represent the binary to find.
-     * 
-     * @return  <code>true</code> if the specified binary was found.
-     * 
-     */
-    public static boolean findBinary(String binaryName) {
-        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
+        Log.i(InternalVariables.TAG, "Checking for BusyBox");
         try {
-			for(String paths : getPath()) {
-				File file = new File(paths + "/" + binaryName);
-			    if (file.exists()) {
-			        log(binaryName + " was found here: " + paths);
-			        return true;
-			    }
-			    log(binaryName + " was NOT found here: " + paths);
-			}
-		}  catch (Exception e) {
-            Log.i(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
+            for (String paths : getPath()) {
+                File file = new File(paths + "/busybox");
+                if (file.exists()) {
+                    log("Found BusyBox here: " + paths);
+                    return true;
+                }
+                log("BusyBox was NOT found here: " + paths);
+            }
+        } catch (Exception e) {
+            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
             if (debugMode) {
-            	e.printStackTrace();
+                e.printStackTrace();
             }
-		}
-        
-        Log.i(InternalVariables.TAG, "Trying second method");
-        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
-        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
-        for (String where : places) {
-            File file = new File(where + binaryName);
-            if (file.exists()) {
-                log(binaryName + " was found here: " + where);
-                return true;
-            }
-            log(binaryName + " was NOT found here: " + where);
+            return false;
         }
         return false;
     }
 
-    
-    /**
-     * 
-     * @param file String that represent the file, including the full
-     * path to the file and its name.
-     * 
-     * @return An <code>int</code> detailing the permissions of the file
-     * or -1 if the file could not be found or permissions couldn't be determined.
-     * 
-     */
-    public static int getFilePermissions(String file) {
-        Log.i(InternalVariables.TAG, "Checking permissions for " + file);
-		File f = new File(file);
-	    if (f.exists()) {
-	        log(file + " was found." );
-	        try {
-				for (String line : sendShell("stat -c %a " + file))
-				{
-					int permissions = -1;
-					try 
-					{
-						permissions = Integer.parseInt(line);
-						return permissions;
-					}
-					catch (Exception e)
-					{}
-				}				
-			} catch (Exception e) {
-				log(e.getMessage());
-				return -1;
-			}
-	        
-	        return -1;
-	    }
-	    else
-	    {
-	    	return -1;
-	    }
-    }
-    
     /**
      * @return BusyBox version is found, null if not found.
      */
@@ -396,6 +348,54 @@ public class RootTools {
      */
     public static boolean installBinary(Context context, int sourceId, String destName) {
         return installBinary(context, sourceId, destName, "700");
+    }
+    
+    /**
+     * This method can be used to kill a running process
+     * 
+     * @param processName name of process to kill
+     * @return <code>true</code> if process was found and killed successfully
+     */
+    public static boolean killProcess(String processName) {
+        Log.i(InternalVariables.TAG, "Killing process " + processName);
+        InternalVariables.pid = null;
+        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+
+        if (InternalVariables.pid != null) {
+            InternalMethods.instance().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid});
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * This method can be used to to check if a process is running
+     * 
+     * @param processName name of process to check
+     * @return <code>true</code> if process was found
+     */
+    public static boolean isProcessRunning(String processName) {
+        Log.i(InternalVariables.TAG, "Checks if process is running: " + processName);
+        InternalVariables.pid = null;
+        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+
+        if (InternalVariables.pid != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * This restarts only Android OS without rebooting the whole device.
+     * This is done by killing the main init process named zygote. Zygote is restarted
+     * automatically by Android after killing it.
+     */
+    public static void restartAndroid() {
+        Log.i(InternalVariables.TAG, "Restart Android");
+        InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"});
     }
 
     /**
@@ -542,26 +542,12 @@ public class RootTools {
      * whether or not RootTools.debugMode is on. So you can use this and not have to
      * worry about handling it yourself.
      *
+     * @param TAG Optional parameter to define the tag that the Log will use.
      * @param msg The message to output.
      */
-    
     public static void log(String msg) {
         log(null, msg);
     }
-
-    /**
-     * This method allows you to output debug messages only when debugging is on.
-     * This will allow you to add a debug option to your app, which by default can be
-     * left off for performance. However, when you need debugging information, a simple
-     * switch can enable it and provide you with detailed logging.
-     * <p/>
-     * This method handles whether or not to log the information you pass it depending
-     * whether or not RootTools.debugMode is on. So you can use this and not have to
-     * worry about handling it yourself.
-     *
-     * @param msg The message to output.
-    * @param TAG Optional parameter to define the tag that the Log will use.
-     */
 
     public static void log(String TAG, String msg) {
         if (debugMode) {
