@@ -35,6 +35,8 @@ public class RootTools {
     //--------------------
 
     public static boolean debugMode = false;
+    public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
+    public static int lastExitCode;
 
     //---------------------------
     //# Public Variable Getters #
@@ -80,6 +82,61 @@ public class RootTools {
         }
     }
 
+    /**
+     * This will return an ArrayList of the class Symlink.
+     * The class Symlink contains the following property's:
+     * path
+     * SymplinkPath
+     * <p/>
+     * These will provide you with any Symlinks in the given path.
+     * 
+     * @param The path to search for Symlinks.
+     *
+     * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
+     * @throws Exception if we cannot return the Symlinks.
+     */
+    public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
+    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"});
+        InternalVariables.symlinks = InternalMethods.instance().getSymLinks();
+        if (InternalVariables.symlinks != null) {
+            return InternalVariables.symlinks;
+        } else {
+            throw new Exception();
+        }
+    }
+
+    /**
+     * This will return a String that represent the symlink for a specified file.
+     * <p/>
+     * 
+     * @param The file to get the Symlink for. (must have absolute path)
+     *
+     * @return <code>String</code> a String that represent the symlink for a specified file or
+     * an empty string if no symlink exists.
+     */
+    public static String getSymlink(File file) {
+    	RootTools.log("Looking for Symlink for " + file.toString());
+    	if (file.exists())
+    	{
+    		RootTools.log("File exists");
+    		
+    		try 
+    		{
+				List<String> results = sendShell("ls -l " + file);
+				String[] symlink = results.get(0).split(" ");
+				if (symlink[symlink.length - 2].equals("->"))
+				{
+					RootTools.log("Symlink found.");
+					return symlink[symlink.length - 1];
+				}
+			}
+    		catch (Exception e) {}
+    	}
+
+    	RootTools.log("Symlink not found");
+    	return "";
+    }
+    
     //------------------
     //# Public Methods #
     //------------------
@@ -90,7 +147,7 @@ public class RootTools {
      * @param activity pass in your Activity
      */
     public static void offerBusyBox(Activity activity) {
-        Log.i(InternalVariables.TAG, "Launching Market for BusyBox");
+        RootTools.log(InternalVariables.TAG, "Launching Market for BusyBox");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
         activity.startActivity(i);
@@ -105,7 +162,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerBusyBox(Activity activity, int requestCode) {
-        Log.i(InternalVariables.TAG, "Launching Market for BusyBox");
+        RootTools.log(InternalVariables.TAG, "Launching Market for BusyBox");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=stericson.busybox"));
         activity.startActivityForResult(i, requestCode);
@@ -118,7 +175,7 @@ public class RootTools {
      * @param activity pass in your Activity
      */
     public static void offerSuperUser(Activity activity) {
-        Log.i(InternalVariables.TAG, "Launching Market for SuperUser");
+        RootTools.log(InternalVariables.TAG, "Launching Market for SuperUser");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
         activity.startActivity(i);
@@ -133,7 +190,7 @@ public class RootTools {
      * @return intent fired
      */
     public static Intent offerSuperUser(Activity activity, int requestCode) {
-        Log.i(InternalVariables.TAG, "Launching Market for SuperUser");
+        RootTools.log(InternalVariables.TAG, "Launching Market for SuperUser");
         Intent i = new Intent(
                 Intent.ACTION_VIEW, Uri.parse("market://details?id=com.noshufou.android.su"));
         activity.startActivityForResult(i, requestCode);
@@ -178,40 +235,62 @@ public class RootTools {
      * @param binaryName String that represent the binary to find.
      * 
      * @return  <code>true</code> if the specified binary was found.
+     * Also, the path the binary was found at can be retrieved via the 
+     * variable lastFoundBinaryPath, if the binary was found in more than
+     * one location this will contain all of these locations.
      * 
      */
     public static boolean findBinary(String binaryName) {
-        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
+    	
+    	boolean found = false;
+    	lastFoundBinaryPaths.clear();
+        
+    	RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
         try 
         {
             for(String paths : getPath()) {
                 File file = new File(paths + "/" + binaryName);
                 if (file.exists()) {
                     log(binaryName + " was found here: " + paths);
-                    return true;
+                    lastFoundBinaryPaths.add(paths);
+                    found = true;
                 }
-                log(binaryName + " was NOT found here: " + paths);
+                else
+                {
+                	log(binaryName + " was NOT found here: " + paths);
+                }
             }
-        }  catch (Exception e) {
-            Log.i(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
-            if (debugMode) {
+        } 
+        catch (Exception e)
+        {
+            RootTools.log(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
+            if (debugMode) 
+            {
                 e.printStackTrace();
-        }
-    }
-        
-        Log.i(InternalVariables.TAG, "Trying second method");
-        Log.i(InternalVariables.TAG, "Checking for " + binaryName);
-        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
-        for (String where : places) {
-            File file = new File(where + binaryName);
-            if (file.exists()) {
-                log(binaryName + " was found here: " + where);
-                return true;
             }
-            log(binaryName + " was NOT found here: " + where);
         }
-        return false;
+        
+        if (!found)
+        {
+	        RootTools.log(InternalVariables.TAG, "Trying second method");
+	        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
+	        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
+	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+	        for (String where : places) {
+	            File file = new File(where + binaryName);
+	            if (file.exists()) {
+	                log(binaryName + " was found here: " + where);
+	                lastFoundBinaryPaths.add(where);
+	                found = true;
+	            }
+	            else
+	            {
+	            	log(binaryName + " was NOT found here: " + where);
+	            }
+	        }
+        }
+        
+        return found;
     }
 
     
@@ -225,7 +304,7 @@ public class RootTools {
      * 
      */
     public static int getFilePermissions(String file) {
-        Log.i(InternalVariables.TAG, "Checking permissions for " + file);
+        RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
         if (f.exists()) {
             log(file + " was found." );
@@ -259,11 +338,11 @@ public class RootTools {
      * @return BusyBox version is found, null if not found.
      */
     public static String getBusyBoxVersion() {
-        Log.i(InternalVariables.TAG, "Getting BusyBox Version");
+        RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
         try {
             InternalMethods.instance().doExec(new String[]{"busybox"});
         } catch (Exception e) {
-            Log.i(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
+            RootTools.log(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
             if (debugMode) {
                 e.printStackTrace();
             }
@@ -272,6 +351,50 @@ public class RootTools {
         return InternalVariables.busyboxVersion;
     }
 
+    /**
+     * This will return an List of Strings.
+     * Each string represents an applet available from BusyBox.
+     * <p/>
+     *
+     * @return <code>List<String></code> a List of strings representing the applets available from Busybox.
+     * @throws Exception if we cannot return the applets available.
+     */
+    public static List<String> getBusyBoxApplets() throws Exception {
+    	List<String> commands = sendShell("busybox --list");
+        if (commands != null) {
+            return commands;
+        } else {
+            throw new Exception();
+        }
+    }
+    
+    /**
+     * This will let you know if an applet is available from BusyBox
+     * <p/>
+     *
+     * @param <code>String</code> The applet to check for.
+     * 
+     * @return <code>true</code> if applet is available, false otherwise.
+     */
+    public static boolean isAppletAvailable(String Applet) {
+    	try
+    	{
+	    	for(String applet : getBusyBoxApplets())
+	    	{
+	    		if (applet.equals(Applet))
+	    		{
+	    			return true;
+	    		}
+	    	}
+	    	return false;
+    	}
+    	catch (Exception e)
+    	{
+    		RootTools.log(e.toString());
+    		return false;
+    	}
+    }
+    
     /**
      * @return <code>true</code> if your app has been given root access.
      * @deprecated As of release 0.7, replaced by {@link #isAccessGiven()}
@@ -285,7 +408,7 @@ public class RootTools {
      * @return <code>true</code> if your app has been given root access.
      */
     public static boolean isAccessGiven() {
-        Log.i(InternalVariables.TAG, "Checking for Root access");
+        RootTools.log(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
         InternalMethods.instance().doExec(new String[]{"id"});
 
@@ -321,7 +444,7 @@ public class RootTools {
      *         if the SDCard is not mounted as read/write
      */
     public static boolean hasEnoughSpaceOnSdCard(long updateSize) {
-        Log.i(InternalVariables.TAG, "Checking SDcard size and that it is mounted as RW");
+        RootTools.log(InternalVariables.TAG, "Checking SDcard size and that it is mounted as RW");
         String status = Environment.getExternalStorageState();
         if (!status.equals(Environment.MEDIA_MOUNTED)) {
             return false;
@@ -421,7 +544,7 @@ public class RootTools {
      * @return <code>true</code> if process was found and killed successfully
      */
     public static boolean killProcess(String processName) {
-        Log.i(InternalVariables.TAG, "Killing process " + processName);
+        RootTools.log(InternalVariables.TAG, "Killing process " + processName);
         InternalVariables.pid = null;
         InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
 
@@ -441,7 +564,7 @@ public class RootTools {
      * @return <code>true</code> if process was found
      */
     public static boolean isProcessRunning(String processName) {
-        Log.i(InternalVariables.TAG, "Checks if process is running: " + processName);
+        RootTools.log(InternalVariables.TAG, "Checks if process is running: " + processName);
         InternalVariables.pid = null;
         InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
 
@@ -454,11 +577,12 @@ public class RootTools {
     
     /**
      * This restarts only Android OS without rebooting the whole device.
+     * This does NOT work on all devices.
      * This is done by killing the main init process named zygote. Zygote is restarted
      * automatically by Android after killing it.
      */
     public static void restartAndroid() {
-        Log.i(InternalVariables.TAG, "Restart Android");
+        RootTools.log(InternalVariables.TAG, "Restart Android");
         InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"});
     }
 
@@ -478,12 +602,32 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
+    	return sendShell(commands, sleepTime, result, true);
+    }
+    
+    /**
+     * Sends several shell command as su (attempts to)
+     *
+     * @param commands  array of commands to send to the shell
+     * @param sleepTime time to sleep between each command, delay.
+     * @param result    injected result object that implements the Result class
+     * @param useRoot   whether to use root or not when issuing these commands.
+     * @return a <code>LinkedList</code> containing each line that was returned
+     *         by the shell after executing or while trying to execute the given commands.
+     *         You must iterate over this list, it does not allow random access,
+     *         so no specifying an index of an item you want,
+     *         not like you're going to know that anyways.
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public static List<String> sendShell(String[] commands, int sleepTime, Result result, boolean useRoot)
+            throws IOException, InterruptedException, RootToolsException {
         if (debugMode) {
             for (String c : commands) {
                 log("Shell command: " + c);
             }
         }
-        return (new Executer().sendShell(commands, sleepTime, result));
+        return (new Executer().sendShell(commands, sleepTime, result, useRoot));
     }
 
 
@@ -629,6 +773,8 @@ public class RootTools {
         private int error = 0;
 
         public abstract void process(String line) throws Exception;
+
+        public abstract void processError(String line) throws Exception;
 
         public abstract void onFailure(Exception ex);
 
