@@ -34,9 +34,9 @@ public class Executer {
      *
      * @throws IOException
      */
-    public List<String> sendShell(String[] commands, int sleepTime, IResult result)
+    public List<String> sendShell(String[] commands, int sleepTime, IResult result, boolean useRoot)
             throws IOException, InterruptedException, RootToolsException {
-        Log.i(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
+        RootTools.log(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
         List<String> response = null;
         if(null == result) {
             response = new LinkedList<String>();
@@ -44,16 +44,20 @@ public class Executer {
 
         Process process = null;
         DataOutputStream os = null;
-        InputStreamReader osRes = null;
+        InputStreamReader osRes = null,
+        				  osErr = null;
 
         try {
-            process = Runtime.getRuntime().exec("su");
+            process = Runtime.getRuntime().exec(useRoot ? "su" : "sh");
+            RootTools.log(useRoot ? "Using Root" : "Using sh");
             if(null != result) {
                 result.setProcess(process);
             }
             os = new DataOutputStream(process.getOutputStream());
             osRes = new InputStreamReader(process.getInputStream());
+            osErr = new InputStreamReader(process.getErrorStream());
             BufferedReader reader = new BufferedReader(osRes);
+            BufferedReader reader_error = new BufferedReader(osErr);
             // Doing Stuff ;)
             for (String single : commands) {
                 os.writeBytes(single + "\n");
@@ -65,6 +69,7 @@ public class Executer {
             os.flush();
 
             String line = reader.readLine();
+            String line_error = reader_error.readLine();
 
             while (line != null) {
                 if(null == result) {
@@ -72,9 +77,22 @@ public class Executer {
                 } else {
                     result.process(line);
                 }
+
                 RootTools.log(line);
                 line = reader.readLine();
             }
+            
+            while (line_error != null) {
+                if(null == result) {
+                    response.add(line_error);
+                } else {
+                    result.processError(line_error);
+                }
+                
+                RootTools.log(line_error);
+                line_error = reader_error.readLine();
+            }
+
         }
         catch (Exception ex) {
             if(null != result) {
@@ -82,9 +100,13 @@ public class Executer {
             }
         }
         finally {
-            int diag = process.waitFor();
-            if(null != result) {
-                result.onComplete(diag);
+            if (process != null) {
+                int diag = process.waitFor();
+                if(null != result) {
+                    result.onComplete(diag);
+                    response.add(Integer.toString(diag));
+                    RootTools.lastExitCode = diag;
+                }
             }
 
             try {
@@ -96,10 +118,11 @@ public class Executer {
                 }
                 process.destroy();
             } catch (Exception e) {
-                //return what we have
-                return response;
+                Log.e(InternalVariables.TAG, "Catched Exception in finally block!");
+                e.printStackTrace();
             }
-            return response;
         }
+        
+        return response;
     }
 }

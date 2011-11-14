@@ -39,12 +39,15 @@ class InternalMethods {
         Process process = null;
         DataOutputStream os = null;
         InputStreamReader osRes = null;
+        InputStreamReader osErr = null;
 
         try {
             process = Runtime.getRuntime().exec("su");
             os = new DataOutputStream(process.getOutputStream());
             osRes = new InputStreamReader(process.getInputStream());
+            osErr = new InputStreamReader(process.getErrorStream());
             BufferedReader reader = new BufferedReader(osRes);
+            BufferedReader reader_err = new BufferedReader(osErr);
 
             // Doing Stuff ;)
             for (String single : commands) {
@@ -57,6 +60,7 @@ class InternalMethods {
             os.flush();
 
             String line = reader.readLine();
+            String line_err = reader_err.readLine();
 
             while (line != null) {
                 if (commands[0].equals("id")) {
@@ -64,12 +68,12 @@ class InternalMethods {
                     for (String id : ID) {
                         if (id.toLowerCase().contains("uid=0")) {
                             InternalVariables.accessGiven = true;
-                            Log.i(InternalVariables.TAG, "Access Given");
+                            RootTools.log(InternalVariables.TAG, "Access Given");
                             break;
                         }
                     }
                     if (!InternalVariables.accessGiven) {
-                        Log.i(InternalVariables.TAG, "Access Denied?");
+                        RootTools.log(InternalVariables.TAG, "Access Denied?");
                     }
                 }
                 if (commands[0].startsWith("df")) {
@@ -84,7 +88,8 @@ class InternalMethods {
                     }
                 }
                 if (commands[0].startsWith("busybox pidof")) {
-                    if (!line.isEmpty()) {
+                    if (!line.equals("")) {
+                        RootTools.log("PID: " + line);
                         InternalVariables.pid = line;
                     }
                 }
@@ -92,6 +97,13 @@ class InternalMethods {
                 RootTools.log(line);
 
                 line = reader.readLine();
+            }
+
+            while (line_err != null) {
+
+                RootTools.log(line_err);
+
+                line_err = reader_err.readLine();
             }
 
             process.waitFor();
@@ -169,6 +181,28 @@ class InternalMethods {
                 ));
             }
             return mounts;
+        } finally {
+            //no need to do anything here.
+        }
+    }
+
+    protected ArrayList<Symlink> getSymLinks() throws FileNotFoundException, IOException {
+        LineNumberReader lnr = null;
+        try {
+            lnr = new LineNumberReader(new FileReader("/data/local/symlinks"));
+            String line;
+            ArrayList<Symlink> symlink = new ArrayList<Symlink>();
+            while ((line = lnr.readLine()) != null) {
+
+                RootTools.log(line);
+
+                String[] fields = line.split(" ");
+                symlink.add(new Symlink(
+                        new File(fields[fields.length - 2]), // file
+                        new File(fields[fields.length]) // SymlinkPath
+                ));
+            }
+            return symlink;
         } finally {
             //no need to do anything here.
         }
