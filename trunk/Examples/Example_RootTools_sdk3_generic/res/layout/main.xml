@@ -5,6 +5,7 @@
     android:layout_height="fill_parent"
     >
 <TextView  
+    android:id="@+id/exampleVersion"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
     android:text="@string/exampleVersion"
@@ -42,6 +43,13 @@
     android:layout_height="wrap_content"
     android:layout_width="fill_parent"
     android:text="@string/isAccessGiven"
+    android:layout_margin="5dip"
+    />
+<Button
+    android:id="@+id/isNativeToolsReady"
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:text="@string/isNativeToolsReady"
     android:layout_margin="5dip"
     />
 <Button

@@ -2,24 +2,38 @@ package RootTools.example;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.stericson.RootTools.RootTools;
 
 public class Example extends Activity {
 	
-	private Button busybox, superuser, isBusyBox, isRootAvailable, isAccessGiven, hasEnoughSpaceOnSdCard;
+	private Button busybox, superuser, isBusyBox, isRootAvailable, isAccessGiven, isNativeToolsReady, hasEnoughSpaceOnSdCard;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-                
+        
+        // Update version number in display
+        String version = "?";
+        try {
+                PackageInfo info =
+                		getPackageManager().getPackageInfo(
+                				getPackageName(), 0);
+                version = info.versionName;
+        } catch (PackageManager.NameNotFoundException e) {}        
+        TextView tv = (TextView)findViewById(R.id.exampleVersion);
+        tv.setText(tv.getText().toString().replaceAll("##version##", version));        
+        
         busybox = (Button) findViewById(R.id.busybox);
         busybox.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
@@ -63,6 +77,18 @@ public class Example extends Activity {
         			makeToast("Root access has been granted!");
         		} else {
         			makeToast("Root access has not been granted!");
+        		}
+        	}
+        });
+        
+        isNativeToolsReady = (Button) findViewById(R.id.isNativeToolsReady);
+        isNativeToolsReady.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v) {
+        		RootTools.debugMode = true;
+        		if (RootTools.isNativeToolsReady(R.raw.nativetools, Example.this)) {
+        			makeToast("Native Tools is ready!");
+        		} else {
+        			makeToast("Native Tools is not ready!");
         		}
         	}
         });

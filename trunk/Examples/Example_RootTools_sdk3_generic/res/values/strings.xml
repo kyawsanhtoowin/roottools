@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="exampleVersion">RootTools example V0.8</string>
+    <string name="exampleVersion">RootTools example V##version##</string>
     <string name="busybox">Example: OfferBusyBox</string>
     <string name="superuser">Example: OfferSuperUser</string>
     <string name="isbusybox">Example: isBusyBoxAvailable</string>
     <string name="isRootAvailable">Example: isRootAvailable</string>
     <string name="isAccessGiven">Example: isAccessGiven</string>
+    <string name="isNativeToolsReady">Example: isNativeToolsReady</string>
     <string name="hasEnoughSpaceOnSdCard">Example: hasEnoughSpaceOnSdCard (100mb)</string>
     <string name="app_name">Example_RootTools_sdk3_generic</string>
 </resources>
