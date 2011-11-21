@@ -11,7 +11,7 @@ The guidelines that will follow should be followed when making commits and chang
   * When making changes to the RootTools library it is very important  that we are only making changes to the code within the developmental folder. 
     * (This keeps the production ready code clean for anyone wanting to download it to their machine.)
 
-  * The only people that should be making changes to the code within the stable folder is ChainsDD and Stericson. 
+  * The only people that should be making changes to the code within the stable folder is ChainsDD, Stericson and CyanSmoker.
     * _Any commit to this folder by anyone else will be reverted and may result in that developer being removed from the project as a contributor._
 
 = Branching =
