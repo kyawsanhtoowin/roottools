@@ -1,3 +1,25 @@
+/* 
+ * This file is part of the RootTools Project: http://code.google.com/p/roottools/
+ *  
+ * Copyright (c) 2012 Stephen Erickson, Chris Ravenscroft, Dominik Schuermann, Adam Shanks
+ *  
+ * This code is dual-licensed under the terms of the Apache License Version 2.0 and
+ * the terms of the General Public License (GPL) Version 2.
+ * You may use this code according to either of these licenses as is most appropriate
+ * for your project on a case-by-case basis.
+ * 
+ * The terms of each license can be found in the root directory of this project's repository as well as at:
+ * 
+ * * http://www.apache.org/licenses/LICENSE-2.0
+ * * http://www.gnu.org/licenses/gpl-2.0.txt
+ *  
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under these Licenses is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See each License for the specific language governing permissions and
+ * limitations under that License.
+ */
+
 package com.stericson.RootTools;
 
 import java.io.File;
@@ -6,6 +28,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -37,11 +60,139 @@ public class RootTools {
     public static boolean debugMode = false;
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
     public static int lastExitCode;
+    public static String utilPath;
 
     //---------------------------
     //# Public Variable Getters #
     //---------------------------
 
+    //------------------
+    //# Public Methods #
+    //------------------
+
+    /**
+     * This will return to you a string to be used in your shell commands which will represent the valid
+     * working toolbox with correct permissions. For instance, if Busybox is available it will return
+     * "busybox", if busybox is not available but toolbox is then it will return "toolbox"
+     * 
+     *@return String that indicates the available toolbox to use for accessing applets.
+     */
+    public static String getWorkingToolbox()
+    {
+    	if (RootTools.checkUtil("busybox"))
+    	{
+    		return "busybox";
+    	}
+    	else if (RootTools.checkUtil("toolbox"))
+    	{
+    		return "toolbox";
+    	}
+    	else
+    	{
+    		return "";
+    	}
+    }
+
+    /**
+     * This will check an array of binaries, determine if they exist and determine that it has
+     * either ther permissions 755, 775, or 777. If an applet is not setup correctly
+     * it will try and fix it. (This is for Busybox applets or Toolbox applets)
+     * 
+     *@param String Name of the utility to check.
+     *
+     *@throws Exception if the operation cannot be completed.
+     *
+     *@return boolean to indicate whether the operation completed. 
+     *Note that this is not indicative of whether the problem was fixed, just that the method did not
+     *encounter any exceptions.
+     */
+	public static boolean checkUtils(String[] utils) throws Exception {
+		
+		for (String util : utils)
+		{
+			if (!checkUtil(util))
+			{
+				if (checkUtil("busybox"))
+				{
+					fixUtil(util, utilPath);
+				}
+				else if (checkUtil("toolbox"))
+				{
+					fixUtil(util, utilPath);
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+
+    /**
+     * This will check a given binary, determine if it exists and determine that it has
+     * either the permissions 755, 775, or 777.
+     * 
+     *
+     *@param String Name of the utility to check.
+     *
+     *@return boolean to indicate whether the binary is installed and has appropriate permissions.
+     */
+	public static boolean checkUtil(String util)
+	{
+		if (RootTools.findBinary(util))
+		{
+			for (String path : RootTools.lastFoundBinaryPaths)
+			{
+				Permissions permissions = RootTools.getFilePermissions(path + "/" + util);
+				
+				if (permissions != null)
+				{
+					int permission = permissions.getPermissions();
+					
+					if (permission == 755 || permission == 777 || permission == 775)
+					{
+						utilPath = path + "/" + util;
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+
+    /**
+     * This will try and fix a given binary. (This is for Busybox applets or Toolbox applets)
+     * By "fix", I mean it will try and symlink the binary from either toolbox or Busybox
+     * and fix the permissions if the permissions are not correct.
+     *
+     *@param String Name of the utility to fix.
+     *@param String path to the toolbox that provides ln, rm, and chmod.
+     *This can be a blank string, a path to a binary that will provide these, or you can use RootTools.getWorkingToolbox()
+     */
+	public static void fixUtil(String util, String utilPath)
+	{
+		try
+		{
+			RootTools.remount("/system", "rw");
+			
+			if (RootTools.findBinary(util))
+			{
+				for (String path : RootTools.lastFoundBinaryPaths)
+					RootTools.sendShell(utilPath + " rm " + path + "/" + util, InternalVariables.timeout);
+				
+				RootTools.sendShell(new String[] {	utilPath + " ln -s " + utilPath + " /system/bin/" + util,
+													utilPath + " chmod 0755 /system/bin/" + util}, 10, InternalVariables.timeout);
+			}
+			
+			RootTools.remount("/system", "ro");
+		}
+		catch (Exception e) {}
+	}	
+	
     /**
      * This will return the environment variable $PATH
      *
@@ -52,7 +203,7 @@ public class RootTools {
         if (InternalVariables.path != null) {
             return InternalVariables.path;
         } else {
-            if (InternalMethods.instance().returnPath()) {
+            if (new InternalMethods().returnPath()) {
                 return InternalVariables.path;
             } else {
                 throw new Exception();
@@ -74,7 +225,7 @@ public class RootTools {
      * @throws Exception if we cannot return the mount points.
      */
     public static ArrayList<Mount> getMounts() throws Exception {
-        InternalVariables.mounts = InternalMethods.instance().getMounts();
+        InternalVariables.mounts = new InternalMethods().getMounts();
         if (InternalVariables.mounts != null) {
             return InternalVariables.mounts;
         } else {
@@ -96,8 +247,8 @@ public class RootTools {
      * @throws Exception if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"});
-        InternalVariables.symlinks = InternalMethods.instance().getSymLinks();
+    	new InternalMethods().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"}, -1);
+        InternalVariables.symlinks = new InternalMethods().getSymLinks();
         if (InternalVariables.symlinks != null) {
             return InternalVariables.symlinks;
         } else {
@@ -122,7 +273,7 @@ public class RootTools {
     		
     		try 
     		{
-				List<String> results = sendShell("ls -l " + file);
+				List<String> results = sendShell("ls -l " + file, InternalVariables.timeout);
 				String[] symlink = results.get(0).split(" ");
 				if (symlink[symlink.length - 2].equals("->"))
 				{
@@ -137,10 +288,6 @@ public class RootTools {
     	return "";
     }
     
-    //------------------
-    //# Public Methods #
-    //------------------
-
     /**
      * This will launch the Android market looking for BusyBox
      *
@@ -198,29 +345,10 @@ public class RootTools {
     }
 
     /**
-     * @return <code>true</code> if su was found
-     * @deprecated As of release 0.7, replaced by {@link #isRootAvailable()}
-     */
-    @Deprecated
-    public static boolean rootAvailable() {
-        return isRootAvailable();
-    }
-
-    /**
      * @return  <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
         return findBinary("su");
-    }
-
-    /**
-     * @return <code>true</code> if BusyBox was found
-     * 
-     * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
-     */
-    @Deprecated
-    public static boolean busyboxAvailable() {
-        return isBusyboxAvailable();
     }
 
     /**
@@ -261,13 +389,13 @@ public class RootTools {
                 }
             }
         } 
+        catch (TimeoutException ex)
+        {
+            RootTools.log(InternalVariables.TAG, "TimeoutException!!!");        	
+        }
         catch (Exception e)
         {
             RootTools.log(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
-            if (debugMode) 
-            {
-                e.printStackTrace();
-            }
         }
         
         if (!found)
@@ -275,7 +403,7 @@ public class RootTools {
 	        RootTools.log(InternalVariables.TAG, "Trying second method");
 	        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
 	        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/" };
 	        for (String where : places) {
 	            File file = new File(where + binaryName);
 	            if (file.exists()) {
@@ -299,54 +427,56 @@ public class RootTools {
      * @param file String that represent the file, including the full
      * path to the file and its name.
      * 
-     * @return An <code>int</code> detailing the permissions of the file
-     * or -1 if the file could not be found or permissions couldn't be determined.
+     * @return An instance of the class permissions from which you can get the permissions of the file
+     * or if the file could not be found or permissions couldn't be determined then permissions will be null.
      * 
      */
-    public static int getFilePermissions(String file) {
+    public static Permissions getFilePermissions(String file) {
         RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
-        if (f.exists()) {
+        if (f.exists()) 
+        {
+        	Permissions permissions;
             log(file + " was found." );
             try 
             {
-                for (String line : sendShell("stat -c %a " + file))
+            	for (String line : sendShell(new String[] {"ls -l " + file, "busybox ls -l " + file, "/system/bin/failsafe/toolbox ls -l " + file, "toolbox ls -l " + file}, 0, InternalVariables.timeout))
                 {
-                    int permissions = -1;
-                    try 
-                    {
-                            permissions = Integer.parseInt(line);
-                            return permissions;
-                    }
-                    catch (Exception e)
-                    {}
-                }                               
-            } catch (Exception e) {
-                log(e.getMessage());
-                return -1;
-            }
-            
-            return -1;
+                	RootTools.log("Line " + line);
+                	try
+                	{
+                		permissions = new InternalMethods().getPermissions(line);
+                		if (permissions != null)
+                			return new InternalMethods().getPermissions(line);
+                	}
+                	catch (Exception e) {
+                		RootTools.log(e.getMessage());
+                	}
+                }
+            } 
+            catch (Exception e) 
+            {
+            	RootTools.log(e.getMessage());
+                return null;
+            }            
         }
-        else
-        {
-            return -1;
-        }
+        
+        return null;
     }
 
     /**
-     * @return BusyBox version is found, null if not found.
+     * @return BusyBox version is found, "" if not found.
      */
     public static String getBusyBoxVersion() {
         RootTools.log(InternalVariables.TAG, "Getting BusyBox Version");
+        InternalVariables.busyboxVersion = null;
         try {
-            InternalMethods.instance().doExec(new String[]{"busybox"});
+            new InternalMethods().doExec(new String[]{"busybox"}, InternalVariables.timeout);
+        } catch (TimeoutException ex) {
+            RootTools.log(InternalVariables.TAG, "TimeoutException!!!");        	
         } catch (Exception e) {
             RootTools.log(InternalVariables.TAG, "BusyBox was not found, more information MAY be available with Debugging on.");
-            if (debugMode) {
-                e.printStackTrace();
-            }
-            return null;
+            return "";
         }
         return InternalVariables.busyboxVersion;
     }
@@ -360,7 +490,7 @@ public class RootTools {
      * @throws Exception if we cannot return the applets available.
      */
     public static List<String> getBusyBoxApplets() throws Exception {
-    	List<String> commands = sendShell("busybox --list");
+    	List<String> commands = sendShell("busybox --list", InternalVariables.timeout);
         if (commands != null) {
             return commands;
         } else {
@@ -394,23 +524,15 @@ public class RootTools {
     		return false;
     	}
     }
-    
-    /**
-     * @return <code>true</code> if your app has been given root access.
-     * @deprecated As of release 0.7, replaced by {@link #isAccessGiven()}
-     */
-    @Deprecated
-    public static boolean accessGiven() {
-        return isAccessGiven();
-    }
 
     /**
      * @return <code>true</code> if your app has been given root access.
+     * @throws TimeoutException if this operation times out. (cannot determine if access is given)
      */
-    public static boolean isAccessGiven() {
+    public static boolean isAccessGiven() throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Checking for Root access");
         InternalVariables.accessGiven = false;
-        InternalMethods.instance().doExec(new String[]{"id"});
+        new InternalMethods().doExec(new String[]{"id"}, InternalVariables.timeout);
 
         if (InternalVariables.accessGiven) {
             return true;
@@ -440,21 +562,6 @@ public class RootTools {
             InternalVariables.nativeToolsReady = installer.installBinary(nativeToolsId, "nativetools", "700");
         }
         return InternalVariables.nativeToolsReady;
-    }
-
-    /**
-     * Checks if there is enough Space on SDCard
-     *
-     * @param updateSize size to Check (long)
-     * @return <code>true</code> if the Update will fit on SDCard,
-     *         <code>false</code> if not enough space on SDCard.
-     *         Will also return <code>false</code>,
-     *         if the SDCard is not mounted as read/write
-     * @deprecated As of release 0.7, replaced by {@link #hasEnoughSpaceOnSdCard(long)}
-     */
-    @Deprecated
-    public static boolean EnoughSpaceOnSdCard(long updateSize) {
-        return hasEnoughSpaceOnSdCard(updateSize);
     }
 
     /**
@@ -569,10 +676,18 @@ public class RootTools {
     public static boolean killProcess(String processName) {
         RootTools.log(InternalVariables.TAG, "Killing process " + processName);
         InternalVariables.pid = null;
-        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+        try {
+			new InternalMethods().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
+		} catch (TimeoutException e) {
+			return false;
+		}
 
         if (InternalVariables.pid != null) {
-            InternalMethods.instance().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid});
+            try {
+				new InternalMethods().doExec(new String[]{"busybox kill -9 " + InternalVariables.pid}, InternalVariables.timeout);
+			} catch (TimeoutException e) {
+				return false;
+			}
 
             return true;
         } else {
@@ -585,11 +700,12 @@ public class RootTools {
      * 
      * @param processName name of process to check
      * @return <code>true</code> if process was found
+     * @throws TimeoutException (Could not determine if the process is running)
      */
-    public static boolean isProcessRunning(String processName) {
+    public static boolean isProcessRunning(String processName) throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Checks if process is running: " + processName);
         InternalVariables.pid = null;
-        InternalMethods.instance().doExec(new String[]{"busybox pidof " + processName});
+        new InternalMethods().doExec(new String[]{"busybox pidof " + processName}, InternalVariables.timeout);
 
         if (InternalVariables.pid != null) {
             return true;
@@ -603,10 +719,11 @@ public class RootTools {
      * This does NOT work on all devices.
      * This is done by killing the main init process named zygote. Zygote is restarted
      * automatically by Android after killing it.
+     * @throws TimeoutException 
      */
-    public static void restartAndroid() {
+    public static void restartAndroid() throws TimeoutException {
         RootTools.log(InternalVariables.TAG, "Restart Android");
-        InternalMethods.instance().doExec(new String[]{"busybox killall -9 zygote"});
+        new InternalMethods().doExec(new String[]{"busybox killall -9 zygote"}, InternalVariables.timeout);
     }
 
     /**
@@ -615,6 +732,13 @@ public class RootTools {
      * @param commands  array of commands to send to the shell
      * @param sleepTime time to sleep between each command, delay.
      * @param result    injected result object that implements the Result class
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a <code>LinkedList</code> containing each line that was returned
      *         by the shell after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
@@ -622,10 +746,11 @@ public class RootTools {
      *         not like you're going to know that anyways.
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result)
-            throws IOException, InterruptedException, RootToolsException {
-    	return sendShell(commands, sleepTime, result, true);
+    public static List<String> sendShell(String[] commands, int sleepTime, Result result, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+    	return sendShell(commands, sleepTime, result, true, timeout);
     }
     
     /**
@@ -636,6 +761,13 @@ public class RootTools {
      * @param sleepTime time to sleep between each command, delay.
      * @param result    injected result object that implements the Result class
      * @param useRoot   whether to use root or not when issuing these commands.
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a <code>LinkedList</code> containing each line that was returned
      *         by the shell after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
@@ -643,15 +775,11 @@ public class RootTools {
      *         not like you're going to know that anyways.
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result, boolean useRoot)
-            throws IOException, InterruptedException, RootToolsException {
-        if (debugMode) {
-            for (String c : commands) {
-                log("Shell command: " + c);
-            }
-        }
-        return (new Executer().sendShell(commands, sleepTime, result, useRoot));
+    public static List<String> sendShell(String[] commands, int sleepTime, Result result, boolean useRoot, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return (new Executer().sendShell(commands, sleepTime, result, useRoot, timeout));
     }
 
 
@@ -660,17 +788,26 @@ public class RootTools {
      *
      * @param commands  array of commands to send to the shell
      * @param sleepTime time to sleep between each command, delay.
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     *
      * @return a LinkedList containing each line that was returned by the shell
      *         after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
      *         so no specifying an index of an item you want,
      *         not like you're going to know that anyways.
+
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String[] commands, int sleepTime)
-            throws IOException, InterruptedException, RootToolsException {
-        return sendShell(commands, sleepTime, null);
+    public static List<String> sendShell(String[] commands, int sleepTime, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return sendShell(commands, sleepTime, null, timeout);
     }
 
     /**
@@ -678,24 +815,40 @@ public class RootTools {
      *
      * @param command command to send to the shell
      * @param result  injected result object that implements the Result class
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a <code>LinkedList</code> containing each line that was returned
      *         by the shell after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
      *         so no specifying an index of an item you want,
      *         not like you're going to know that anyways.
+     *
      * @throws InterruptedException
      * @throws IOException
      * @throws RootToolsException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String command, Result result)
-            throws IOException, InterruptedException, RootToolsException {
-        return sendShell(new String[]{command}, 0, result);
+    public static List<String> sendShell(String command, Result result, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return sendShell(new String[]{command}, 0, result, timeout);
     }
 
     /**
      * Sends one shell command as su (attempts to)
      *
      * @param command command to send to the shell
+     * @param timeout   How long to wait before throwing TimeoutException, sometimes
+     * 					when running root commands on certain devices or roms
+     * 					ANR's may occur because a process never returns or readline never returns.
+     * 					This allows you to protect your application from throwing an ANR.
+     * 					
+     * 					if you pass -1, then the default timeout is 5 minutes.
+     * 
      * @return a LinkedList containing each line that was returned by the shell
      *         after executing or while trying to execute the given commands.
      *         You must iterate over this list, it does not allow random access,
@@ -703,10 +856,11 @@ public class RootTools {
      *         not like you're going to know that anyways.
      * @throws InterruptedException
      * @throws IOException
+     * @throws TimeoutException 
      */
-    public static List<String> sendShell(String command)
-            throws IOException, InterruptedException, RootToolsException {
-        return sendShell(command, null);
+    public static List<String> sendShell(String command, int timeout)
+            throws IOException, RootToolsException, TimeoutException {
+        return sendShell(command, null, timeout);
     }
 
     /**
@@ -715,12 +869,15 @@ public class RootTools {
      * @param path The partition to find the space for.
      * @return the amount if space found within the desired partition.
      *         If the space was not found then the value is -1
+     * @throws TimeoutException 
      */
     public static long getSpace(String path) {
         InternalVariables.getSpaceFor = path;
         boolean found = false;
         String[] commands = {"df " + path};
-        InternalMethods.instance().doExec(commands);
+        try {
+			new InternalMethods().doExec(commands, -1);
+		} catch (TimeoutException e) {}
 
         RootTools.log("Looking for Space");
 
@@ -732,7 +889,7 @@ public class RootTools {
                 RootTools.log(spaceSearch);
 
                 if (found) {
-                    return InternalMethods.instance().getConvertedSpace(spaceSearch);
+                    return new InternalMethods().getConvertedSpace(spaceSearch);
                 } else if (spaceSearch.equals("used,")) {
                     found = true;
                 }
@@ -754,7 +911,7 @@ public class RootTools {
                 if (spaceSearch.length() > 0) {
                     RootTools.log(spaceSearch + ("Valid"));
                     if (count == targetCount) {
-                        return InternalMethods.instance().getConvertedSpace(spaceSearch);
+                        return new InternalMethods().getConvertedSpace(spaceSearch);
                     }
                     count++;
                 }
@@ -782,13 +939,15 @@ public class RootTools {
     }
 
     public static void log(String TAG, String msg) {
-        if (debugMode) {
-            if (TAG != null) {
-                Log.d(TAG, msg);
-            } else {
-                Log.d(InternalVariables.TAG, msg);
-            }
-        }
+	    if (msg != null && !msg.equals("")) {
+    		if (debugMode) {
+	            if (TAG != null) {
+	                Log.d(TAG, msg);
+	            } else {
+	                Log.d(InternalVariables.TAG, msg);
+	            }
+	        }
+    	}
     }
 
     public static abstract class Result implements IResult {
