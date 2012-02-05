@@ -1,3 +1,5 @@
+#summary A short licensing FAQ
+
 = The blob of text =
 
 {{{
