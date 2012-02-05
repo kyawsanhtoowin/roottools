@@ -1,3 +1,25 @@
+/* 
+ * This file is part of the RootTools Project: http://code.google.com/p/roottools/
+ *  
+ * Copyright (c) 2012 Stephen Erickson, Chris Ravenscroft, Dominik Schuermann, Adam Shanks
+ *  
+ * This code is dual-licensed under the terms of the Apache License Version 2.0 and
+ * the terms of the General Public License (GPL) Version 2.
+ * You may use this code according to either of these licenses as is most appropriate
+ * for your project on a case-by-case basis.
+ * 
+ * The terms of each license can be found in the root directory of this project's repository as well as at:
+ * 
+ * * http://www.apache.org/licenses/LICENSE-2.0
+ * * http://www.gnu.org/licenses/gpl-2.0.txt
+ *  
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under these Licenses is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See each License for the specific language governing permissions and
+ * limitations under that License.
+ */
+
 package com.stericson.RootTools;
 
 import android.app.Activity;
@@ -13,6 +35,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class SanityCheckRootTools extends Activity {
     private ScrollView mScrollView;
@@ -39,10 +62,15 @@ public class SanityCheckRootTools extends Activity {
         }
 
         print("SanityCheckRootTools v " + version + "\n\n");
-        if (false == RootTools.isAccessGiven()) {
-            print("ERROR: No root access to this device.\n");
-            return;
-        }
+        try {
+			if (false == RootTools.isAccessGiven()) {
+			    print("ERROR: No root access to this device.\n");
+			    return;
+			}
+		} catch (TimeoutException e) {
+		    print("ERROR: could not determine root access to this device.\n");
+		    return;
+		}
 
         // Display infinite progress bar
         mPDialog = new ProgressDialog(this);
@@ -64,11 +92,9 @@ public class SanityCheckRootTools extends Activity {
     // Run our long-running tests in their separate thread so as to
     // not interfere with proper rendering.
     private class SanityCheckThread extends Thread {
-        private Context mContext;
         private Handler mHandler;
 
         public SanityCheckThread(Context context, Handler handler) {
-            mContext = context;
             mHandler = handler;
         }
 
@@ -92,7 +118,7 @@ public class SanityCheckRootTools extends Activity {
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ return array");
             try {
-                List<String> response = RootTools.sendShell("ls /");
+                List<String> response = RootTools.sendShell("ls /", InternalVariables.timeout);
                 visualUpdate(TestHandler.ACTION_DISPLAY, "[ Listing of / (passing a List)]\n");
                 for (String line : response) {
                     visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
@@ -100,13 +126,13 @@ public class SanityCheckRootTools extends Activity {
             } catch (IOException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
-            } catch (InterruptedException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-                return;
             } catch (RootToolsException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
                 return;
-            }
+            } catch (TimeoutException e) {
+                visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
+                return;
+			}
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ callbacks");
             try {
@@ -133,19 +159,19 @@ public class SanityCheckRootTools extends Activity {
                         visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
 					}
                 };
-                RootTools.sendShell("ls /", result);
+                RootTools.sendShell("ls /", result, InternalVariables.timeout);
                 if (0 != result.getError())
                     return;
             } catch (IOException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
                 return;
-            } catch (InterruptedException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-                return;
             } catch (RootToolsException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
                 return;
-            }
+            } catch (TimeoutException e) {
+                visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
+                return;
+			}
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() for multiple commands");
             try {
@@ -182,17 +208,19 @@ public class SanityCheckRootTools extends Activity {
                                 "echo \"* DATE:\"",
                                 "date"},
                         2000,
-                        result
+                        result,
+                        InternalVariables.timeout
                 );
                 if (0 != result.getError())
                     return;
             } catch (IOException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
-            } catch (InterruptedException e) {
-                visualUpdate(TestHandler.ACTION_HIDE, "ERROR: " + e);
             } catch (RootToolsException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "DEV-DEFINED ERROR: " + e);
-            }
+            } catch (TimeoutException e) {
+                visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
+                return;
+			}
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
             visualUpdate(TestHandler.ACTION_HIDE, null);
