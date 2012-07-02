@@ -4,6 +4,10 @@
 
 Here is an overview of what methods are provided by the RootTools library and how to use them. Everything below is subject to change at any time, and it fact will be changing. This library is constantly evolving and becoming better. When we change things, we will try and make it as pain free for you as possible.
 
+For more information on methods available within the RootTools Library please look at this Javadoc:
+
+http://roottools.googlecode.com/svn/trunk/Developmental/doc/index.html
+
 ----
 
 = Including the Library in Eclipse =
@@ -13,6 +17,7 @@ Including the RootTools library into your project so that you can utilize it is 
   # In Eclipse, right click your project, navigate to "Build Path", then to "configure build path"
   # Now choose "add External Jar"
   # Navigate to the RootTools .jar file you download and choose it.
+  # Navigate to "Order and Export" make sure the box is ticked next to the library, and move it to the top of the list.
   # Finish up by choosing "ok"
 
 That's all there is to it! The library should now be ready for use in your Android project. Now that you have the library included into your Android project all you need to do is import it into the desired java file. You can do this by putting "*import com.stericson.RootTools.`*`*"  OR "*import com.stericson.RootTools.RootTools*" at the top of your java file, right under the package name for your Android app.
