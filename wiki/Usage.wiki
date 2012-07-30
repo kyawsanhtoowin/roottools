@@ -54,7 +54,21 @@ OR
 RootTools.log("OurTag", "this is a log message);
 }}}
 
-This method uses log.d since this is intended for debug code.
+This method uses log.d by default since this is intended for debug code.
+
+If you want to change the type of logging you can do so like this:
+
+{{{
+log(TAG, msg, 3, null);
+}}}
+
+Here you can pass the TAG you want to use for the log, the message, the type of logging to perform, and the exception if you want.
+
+The types available are as such:
+
+1 = log.v
+2 = log.e
+3 = log.d
 
 = Checking for busybox =
 
@@ -121,6 +135,30 @@ if (RootTools.hasEnoughSpaceOnSdCard(updateSize)) {
 the method takes a long of how much space you need in blocks and returns true if there is enough space, and the SD card is writable. This method will also return false if the SD card is mounted by the user.
 ----
 = Running root commands =
+Running a command as root is simple! Here is an example:
+
+{{{
+CommandCapture command = new CommandCapture(0, "echo this is a command", "echo this is another command");
+RootTools.getShell(true).add(command).waitForFinish();
+}}}
+
+You can see that with this command you can run as many commands as you want.
+
+If you need to log the output from the commands you are running you can do the following:
+
+{{{
+Command command = new Command(0, "echo this is a command", "echo this is another command")
+{
+	@Override
+	public void output(int id, String line)
+	{
+            (Do something with the output here)
+	}
+};
+RootTools.getShell(true).add(command).waitForFinish();
+}}}
+
+== Deprecated ==
 !RootTools has two methods for simplifying running root commands. One method for when you need to run a single command, another for when you need to run multiple. They are used as follows:
 {{{
 try {
