@@ -1,5 +1,5 @@
 #summary Guidelines for contributing to RootTools
-#labels Phase-Implementation,Featured
+#labels Phase-Implementation
 
 = Introduction =
 
