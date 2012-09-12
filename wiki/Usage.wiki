@@ -160,8 +160,10 @@ RootTools.getShell(true).add(command).waitForFinish();
 }}}
 
 = Everything below is Deprecated =
----- 
----- 
+
+----
+
+----
 !RootTools has two methods for simplifying running root commands. One method for when you need to run a single command, another for when you need to run multiple. They are used as follows:
 {{{
 try {
