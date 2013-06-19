@@ -54,8 +54,9 @@ class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-            	RootTools.sendShell(new String[] { privateFilesPath + "/" + binaryName + " " + parameter }, 0, -1);
-			} catch (Exception e) {}
+                RootTools.sendShell(new String[]{privateFilesPath + "/" + binaryName + " " + parameter}, 0, -1);
+            } catch (Exception e) {
+            }
         }
     }
 

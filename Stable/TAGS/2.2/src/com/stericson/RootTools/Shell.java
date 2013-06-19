@@ -38,299 +38,288 @@ import java.util.List;
 import android.os.SystemClock;
 
 public class Shell {
-	private final Process proc;
-	private final DataInputStream in;
-	private final DataOutputStream out;
-	private final List<Command> commands = new ArrayList<Command>();
-	private boolean close = false;
-	private static final String token = "F*D^W@#FGF";
+    private final Process proc;
+    private final DataInputStream in;
+    private final DataOutputStream out;
+    private final List<Command> commands = new ArrayList<Command>();
+    private boolean close = false;
+    private static final String token = "F*D^W@#FGF";
 
-	private static Shell rootShell = null;
-	private static Shell shell = null;
-	private static Shell customShell = null;
+    private static Shell rootShell = null;
+    private static Shell shell = null;
+    private static Shell customShell = null;
 
-	public static Shell startRootShell() throws IOException {
-		if (rootShell == null) {
-			RootTools.log("Starting Root Shell!");
-			String cmd = "su";
-			// keep prompting the user until they accept, we hit 10 retries, or
-			// the attempt fails quickly
-			int retries = 0;
-			while (rootShell == null) {
-				long start = SystemClock.elapsedRealtime();
-				try {
-					rootShell = new Shell(cmd);
-				} catch (IOException e) {
-					long delay = SystemClock.elapsedRealtime() - start;
-					if (delay < 500 || retries++ >= 10)
-						throw e;
-				}
-			}
-		}
-		else
-		{
-			RootTools.log("Using Existing Root Shell!");
-		}
-		
-		return rootShell;
-	}
+    public static Shell startRootShell() throws IOException {
+        if (rootShell == null) {
+            RootTools.log("Starting Root Shell!");
+            String cmd = "su";
+            // keep prompting the user until they accept, we hit 10 retries, or
+            // the attempt fails quickly
+            int retries = 0;
+            while (rootShell == null) {
+                long start = SystemClock.elapsedRealtime();
+                try {
+                    rootShell = new Shell(cmd);
+                } catch (IOException e) {
+                    long delay = SystemClock.elapsedRealtime() - start;
+                    if (delay < 500 || retries++ >= 10)
+                        throw e;
+                }
+            }
+        } else {
+            RootTools.log("Using Existing Root Shell!");
+        }
 
-	public static Shell startCustomShell(String shellPath) throws IOException {
-		if (customShell == null) {
-			RootTools.log("Starting Custom Shell!");
-			customShell = new Shell(shellPath);
-		}
-		else
-			RootTools.log("Using Existing Custom Shell!");
+        return rootShell;
+    }
 
-		return customShell;
-	}
-	
-	public static Shell startShell() throws IOException {
-		if (shell == null) {
-			RootTools.log("Starting Shell!");
-			shell = new Shell("/system/bin/sh");
-		}
-		else
-			RootTools.log("Using Existing Shell!");
-		return shell;
-	}
+    public static Shell startCustomShell(String shellPath) throws IOException {
+        if (customShell == null) {
+            RootTools.log("Starting Custom Shell!");
+            customShell = new Shell(shellPath);
+        } else
+            RootTools.log("Using Existing Custom Shell!");
 
-	public static void runRootCommand(Command command) throws IOException {
-		startRootShell().add(command);
-	}
+        return customShell;
+    }
 
-	public static void runCommand(Command command) throws IOException {
-		startShell().add(command);
-	}
+    public static Shell startShell() throws IOException {
+        if (shell == null) {
+            RootTools.log("Starting Shell!");
+            shell = new Shell("/system/bin/sh");
+        } else
+            RootTools.log("Using Existing Shell!");
+        return shell;
+    }
 
-	public static void closeCustomShell() throws IOException {
-		if (customShell == null)
-			return;
-		customShell.close();
-	}
+    public static void runRootCommand(Command command) throws IOException {
+        startRootShell().add(command);
+    }
 
-	public static void closeRootShell() throws IOException {
-		if (rootShell == null)
-			return;
-		rootShell.close();
-	}
-	
-	public static void closeShell() throws IOException {
-		if (shell == null)
-			return;
-		shell.close();
-	}
+    public static void runCommand(Command command) throws IOException {
+        startShell().add(command);
+    }
 
-	public static void closeAll() throws IOException
-	{
-		closeShell();
-		closeRootShell();
-		closeCustomShell();
-	}
-	
-	public static boolean isShellOpen()
-	{
-		if (shell == null)
-			return false;
-		else
-			return true;
-	}
+    public static void closeCustomShell() throws IOException {
+        if (customShell == null)
+            return;
+        customShell.close();
+    }
 
-	public static boolean isCustomShellOpen()
-	{
-		if (customShell == null)
-			return false;
-		else
-			return true;
-	}
+    public static void closeRootShell() throws IOException {
+        if (rootShell == null)
+            return;
+        rootShell.close();
+    }
 
-	public static boolean isRootShellOpen()
-	{
-		if (rootShell == null)
-			return false;
-		else
-			return true;
-	}
-	
-	public static boolean isAnyShellOpen()
-	{
-		if (shell != null)
-			return true;
-		else if (rootShell != null)
-			return true;
-		else if (customShell != null)
-			return true;
-		else
-			return false;
-	}
-	
-	public Shell(String cmd) throws IOException {
+    public static void closeShell() throws IOException {
+        if (shell == null)
+            return;
+        shell.close();
+    }
 
-		RootTools.log("Starting shell: " + cmd);
+    public static void closeAll() throws IOException {
+        closeShell();
+        closeRootShell();
+        closeCustomShell();
+    }
 
-		proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-		in = new DataInputStream(proc.getInputStream());
-		out = new DataOutputStream(proc.getOutputStream());
+    public static boolean isShellOpen() {
+        if (shell == null)
+            return false;
+        else
+            return true;
+    }
 
-		out.write("echo Started\n".getBytes());
-		out.flush();
+    public static boolean isCustomShellOpen() {
+        if (customShell == null)
+            return false;
+        else
+            return true;
+    }
 
-		while (true) {
-			String line = in.readLine();
-			if (line == null)
-				throw new EOFException();
-			if ("".equals(line))
-				continue;
-			if ("Started".equals(line))
-				break;
+    public static boolean isRootShellOpen() {
+        if (rootShell == null)
+            return false;
+        else
+            return true;
+    }
 
-			proc.destroy();
-			throw new IOException("Unable to start shell, unexpected output \""
-					+ line + "\"");
-		}
+    public static boolean isAnyShellOpen() {
+        if (shell != null)
+            return true;
+        else if (rootShell != null)
+            return true;
+        else if (customShell != null)
+            return true;
+        else
+            return false;
+    }
 
-		new Thread(input, "Shell Input").start();
-		new Thread(output, "Shell Output").start();
-	}
+    public Shell(String cmd) throws IOException {
 
-	private Runnable input = new Runnable() {
-		public void run() {
-			try {
-				writeCommands();
-			} catch (IOException e) {
-				RootTools.log(e.getMessage(), 2, e);
-			}
-		}
-	};
+        RootTools.log("Starting shell: " + cmd);
 
-	private void writeCommands() throws IOException {
-		try {
-			int write = 0;
-			while (true) {
-				DataOutputStream out;
-				synchronized (commands) {
-					while (!close && write >= commands.size()) {
-						commands.wait();
-					}
-					out = this.out;
-				}
-				if (write < commands.size()) {
-					Command next = commands.get(write);
-					next.writeCommand(out);
-					String line = "\necho " + token + " " + write + " $?\n";
-					out.write(line.getBytes());
-					out.flush();
-					write++;
-				} else if (close) {
-					out.write("\nexit 0\n".getBytes());
-					out.flush();
-					out.close();
-					RootTools.log("Closing shell");
-					return;
-				}
-			}
-		} catch (InterruptedException e) {
-			RootTools.log(e.getMessage(), 2, e);
-		}
-	}
+        proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+        in = new DataInputStream(proc.getInputStream());
+        out = new DataOutputStream(proc.getOutputStream());
 
-	private Runnable output = new Runnable() {
-		public void run() {
-			try {
-				readOutput();
-			} catch (IOException e) {
-				RootTools.log(e.getMessage(), 2, e);
-			} catch (InterruptedException e) {
-				RootTools.log(e.getMessage(), 2, e);
-			}
-		}
-	};
+        out.write("echo Started\n".getBytes());
+        out.flush();
 
-	private void readOutput() throws IOException, InterruptedException {
-		Command command = null;
-		int read = 0;
-		while (true) {
-			String line = in.readLine();
+        while (true) {
+            String line = in.readLine();
+            if (line == null)
+                throw new EOFException();
+            if ("".equals(line))
+                continue;
+            if ("Started".equals(line))
+                break;
 
-			// terminate on EOF
-			if (line == null)
-				break;
-			
-			// Log.v("Shell", "Out; \"" + line + "\"");
-			if (command == null) {
-				if (read >= commands.size())
-				{
-					if (close)
-						break;
-					continue;
-				}
-				command = commands.get(read);
-			}
+            proc.destroy();
+            throw new IOException("Unable to start shell, unexpected output \""
+                    + line + "\"");
+        }
 
-			int pos = line.indexOf(token);
-			if (pos > 0)
-				command.output(command.id, line.substring(0, pos));
-			if (pos >= 0) {
-				line = line.substring(pos);
-				String fields[] = line.split(" ");
-				int id = Integer.parseInt(fields[1]);
-				if (id == read) {
-					command.exitCode(Integer.parseInt(fields[2]));
-					read++;
-					command = null;
-					continue;
-				}
-			}
-			command.output(command.id, line);
-		}
-		RootTools.log("Read all output");
-		proc.waitFor();
-		proc.destroy();
-		RootTools.log("Shell destroyed");
-		
-		while (read < commands.size()) {
-			if (command == null)
-				command = commands.get(read);
-			command.terminated();
-			command = null;
-			read++;
-		}
-	}
+        new Thread(input, "Shell Input").start();
+        new Thread(output, "Shell Output").start();
+    }
 
-	public Command add(Command command) throws IOException {
-		if (close)
-			throw new IllegalStateException(
-					"Unable to add commands to a closed shell");
-		synchronized (commands) {
-			commands.add(command);
-			commands.notifyAll();
-		}
-		
-		return command;
-	}
+    private Runnable input = new Runnable() {
+        public void run() {
+            try {
+                writeCommands();
+            } catch (IOException e) {
+                RootTools.log(e.getMessage(), 2, e);
+            }
+        }
+    };
 
-	public void close() throws IOException {
-		if (this == rootShell)
-			rootShell = null;
-		if (this == shell)
-			shell = null;
-		synchronized (commands) {
-			this.close = true;
-			commands.notifyAll();
-		}
-	}
+    private void writeCommands() throws IOException {
+        try {
+            int write = 0;
+            while (true) {
+                DataOutputStream out;
+                synchronized (commands) {
+                    while (!close && write >= commands.size()) {
+                        commands.wait();
+                    }
+                    out = this.out;
+                }
+                if (write < commands.size()) {
+                    Command next = commands.get(write);
+                    next.writeCommand(out);
+                    String line = "\necho " + token + " " + write + " $?\n";
+                    out.write(line.getBytes());
+                    out.flush();
+                    write++;
+                } else if (close) {
+                    out.write("\nexit 0\n".getBytes());
+                    out.flush();
+                    out.close();
+                    RootTools.log("Closing shell");
+                    return;
+                }
+            }
+        } catch (InterruptedException e) {
+            RootTools.log(e.getMessage(), 2, e);
+        }
+    }
 
-	public int countCommands() {
-		return commands.size();
-	}
-	
-	public void waitFor() throws IOException, InterruptedException {
-		close();
-		if (commands.size() > 0)
-		{
-			Command command = commands.get(commands.size() - 1);
-			command.exitCode();
-		}
-	}
+    private Runnable output = new Runnable() {
+        public void run() {
+            try {
+                readOutput();
+            } catch (IOException e) {
+                RootTools.log(e.getMessage(), 2, e);
+            } catch (InterruptedException e) {
+                RootTools.log(e.getMessage(), 2, e);
+            }
+        }
+    };
+
+    private void readOutput() throws IOException, InterruptedException {
+        Command command = null;
+        int read = 0;
+        while (true) {
+            String line = in.readLine();
+
+            // terminate on EOF
+            if (line == null)
+                break;
+
+            // Log.v("Shell", "Out; \"" + line + "\"");
+            if (command == null) {
+                if (read >= commands.size()) {
+                    if (close)
+                        break;
+                    continue;
+                }
+                command = commands.get(read);
+            }
+
+            int pos = line.indexOf(token);
+            if (pos > 0)
+                command.output(command.id, line.substring(0, pos));
+            if (pos >= 0) {
+                line = line.substring(pos);
+                String fields[] = line.split(" ");
+                int id = Integer.parseInt(fields[1]);
+                if (id == read) {
+                    command.exitCode(Integer.parseInt(fields[2]));
+                    read++;
+                    command = null;
+                    continue;
+                }
+            }
+            command.output(command.id, line);
+        }
+        RootTools.log("Read all output");
+        proc.waitFor();
+        proc.destroy();
+        RootTools.log("Shell destroyed");
+
+        while (read < commands.size()) {
+            if (command == null)
+                command = commands.get(read);
+            command.terminated();
+            command = null;
+            read++;
+        }
+    }
+
+    public Command add(Command command) throws IOException {
+        if (close)
+            throw new IllegalStateException(
+                    "Unable to add commands to a closed shell");
+        synchronized (commands) {
+            commands.add(command);
+            commands.notifyAll();
+        }
+
+        return command;
+    }
+
+    public void close() throws IOException {
+        if (this == rootShell)
+            rootShell = null;
+        if (this == shell)
+            shell = null;
+        synchronized (commands) {
+            this.close = true;
+            commands.notifyAll();
+        }
+    }
+
+    public int countCommands() {
+        return commands.size();
+    }
+
+    public void waitFor() throws IOException, InterruptedException {
+        close();
+        if (commands.size() > 0) {
+            Command command = commands.get(commands.size() - 1);
+            command.exitCode();
+        }
+    }
 }

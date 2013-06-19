@@ -52,17 +52,14 @@ class Remounter {
      */
 
     protected boolean remount(String file, String mountType) {
-    	String util = "";
-    	
-    	if (RootTools.checkUtil("busybox"))
-    	{
-    		util = RootTools.utilPath;
-    	}
-    	else if (RootTools.checkUtil("toolbox"))
-    	{
-    		util = RootTools.utilPath;    		
-    	}
-    	
+        String util = "";
+
+        if (RootTools.checkUtil("busybox")) {
+            util = RootTools.utilPath;
+        } else if (RootTools.checkUtil("toolbox")) {
+            util = RootTools.utilPath;
+        }
+
         //if the path has a trailing slash get rid of it.
         if (file.endsWith("/")) {
             file = file.substring(0, file.lastIndexOf("/"));
@@ -102,25 +99,26 @@ class Remounter {
         if (!isMountMode) {
             //grab an instance of the internal class
             try {
-            	RootTools.sendShell(new String[]{
-				        String.format(
-				                util + " mount -o remount,%s %s %s",
-				                mountType.toLowerCase(),
-				                mountPoint.getDevice().getAbsolutePath(),
-				                mountPoint.getMountPoint().getAbsolutePath()),
-				        String.format(
-				        		"mount -o remount,%s %s %s",
-				                mountType.toLowerCase(),
-				                mountPoint.getDevice().getAbsolutePath(),
-				                mountPoint.getMountPoint().getAbsolutePath()),
-				        String.format(
-				        		"/system/bin/toolbox mount -o remount,%s %s %s",
-				                mountType.toLowerCase(),
-				                mountPoint.getDevice().getAbsolutePath(),
-				                mountPoint.getMountPoint().getAbsolutePath())
-				}, 0, -1);
-			} catch (Exception e) {}
-			
+                RootTools.sendShell(new String[]{
+                        String.format(
+                                util + " mount -o remount,%s %s %s",
+                                mountType.toLowerCase(),
+                                mountPoint.getDevice().getAbsolutePath(),
+                                mountPoint.getMountPoint().getAbsolutePath()),
+                        String.format(
+                                "mount -o remount,%s %s %s",
+                                mountType.toLowerCase(),
+                                mountPoint.getDevice().getAbsolutePath(),
+                                mountPoint.getMountPoint().getAbsolutePath()),
+                        String.format(
+                                "/system/bin/toolbox mount -o remount,%s %s %s",
+                                mountType.toLowerCase(),
+                                mountPoint.getDevice().getAbsolutePath(),
+                                mountPoint.getMountPoint().getAbsolutePath())
+                }, 0, -1);
+            } catch (Exception e) {
+            }
+
             mountPoint = findMountPointRecursive(file);
         }
 

@@ -35,7 +35,7 @@ class InternalVariables {
     // # Internal Variables #
     // ----------------------
 
-	//Constants
+    //Constants
     // Version numbers should be maintained here.
     protected static String TAG = "RootTools v2.2";
     protected static int timeout = 10000;
@@ -46,7 +46,7 @@ class InternalVariables {
     protected static int GI = 5;
     protected static int GS = 6;
     protected static int GSYM = 7;
-    
+
     protected static boolean accessGiven = false;
     protected static boolean nativeToolsReady = false;
     protected static String[] space;
@@ -60,11 +60,11 @@ class InternalVariables {
     protected static Permissions permissions;
 
 
-
     // regex to get pid out of ps line, example:
     // root 2611 0.0 0.0 19408 2104 pts/2 S 13:41 0:00 bash
     protected static final String PS_REGEX = "^\\S+\\s+([0-9]+).*$";
     protected static Pattern psPattern;
+
     static {
         psPattern = Pattern.compile(PS_REGEX);
     }

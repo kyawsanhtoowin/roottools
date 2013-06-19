@@ -23,71 +23,59 @@
 package com.stericson.RootTools;
 
 public class Permissions {
-	String type;
-	String user;
-	String group;
-	String other;
-	String symlink;
-	int permissions;
-	
+    String type;
+    String user;
+    String group;
+    String other;
+    String symlink;
+    int permissions;
 
-	public String getSymlink()
-	{
-		return this.symlink;
-	}
-	
-	public String getType()
-	{
-		return type;
-	}
-	
-	public int getPermissions()
-	{
-		return this.permissions;
-	}
-	
-    public String getUserPermissions()
-    {
-    	return this.user;
+
+    public String getSymlink() {
+        return this.symlink;
     }
-    
-    public String getGroupPermissions()
-    {
-    	return this.group;
+
+    public String getType() {
+        return type;
     }
-    
-    public String getOtherPermissions()
-    {
-    	return this.other;
+
+    public int getPermissions() {
+        return this.permissions;
     }
-    
-    public void setSymlink(String symlink)
-    {
-    	this.symlink = symlink;
+
+    public String getUserPermissions() {
+        return this.user;
     }
-    
-    public void setType(String type)
-    {
-    	this.type = type;
+
+    public String getGroupPermissions() {
+        return this.group;
     }
-    
-    public void setPermissions(int permissions)
-    {
-    	this.permissions = permissions;
+
+    public String getOtherPermissions() {
+        return this.other;
     }
-    
-    public void setUserPermissions(String user)
-    {
-    	this.user = user;
+
+    public void setSymlink(String symlink) {
+        this.symlink = symlink;
     }
-    
-    public void setGroupPermissions(String group)
-    {
-    	this.group = group;
+
+    public void setType(String type) {
+        this.type = type;
     }
-    
-    public void setOtherPermissions(String other)
-    {
-    	this.other = other;
+
+    public void setPermissions(int permissions) {
+        this.permissions = permissions;
+    }
+
+    public void setUserPermissions(String user) {
+        this.user = user;
+    }
+
+    public void setGroupPermissions(String group) {
+        this.group = group;
+    }
+
+    public void setOtherPermissions(String other) {
+        this.other = other;
     }
 }

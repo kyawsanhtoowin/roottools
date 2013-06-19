@@ -10,14 +10,21 @@ import java.io.Serializable;
  */
 public interface IResult {
     public abstract void process(String line) throws Exception;
+
     public abstract void onFailure(Exception ex);
+
     public abstract void onComplete(int diag);
 
-    public IResult      setProcess(Process process);
-    public Process      getProcess();
-    public IResult      setData(Serializable data);
+    public IResult setProcess(Process process);
+
+    public Process getProcess();
+
+    public IResult setData(Serializable data);
+
     public Serializable getData();
-    public IResult      setError(int error);
-    public int          getError();
+
+    public IResult setError(int error);
+
+    public int getError();
 
 }

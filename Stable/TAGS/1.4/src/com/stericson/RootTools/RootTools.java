@@ -89,14 +89,13 @@ public class RootTools {
      * SymplinkPath
      * <p/>
      * These will provide you with any Symlinks in the given path.
-     * 
-     * @param The path to search for Symlinks.
      *
+     * @param The path to search for Symlinks.
      * @return <code>ArrayList<Symlink></code> an ArrayList of the class Symlink.
      * @throws Exception if we cannot return the Symlinks.
      */
     public static ArrayList<Symlink> getSymlinks(String path) throws Exception {
-    	InternalMethods.instance().doExec(new String[] { "find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"});
+        InternalMethods.instance().doExec(new String[]{"find " + path + " -type l -exec ls -l {} \\; > /data/local/symlinks.txt;"});
         InternalVariables.symlinks = InternalMethods.instance().getSymLinks();
         if (InternalVariables.symlinks != null) {
             return InternalVariables.symlinks;
@@ -108,35 +107,31 @@ public class RootTools {
     /**
      * This will return a String that represent the symlink for a specified file.
      * <p/>
-     * 
-     * @param The file to get the Symlink for. (must have absolute path)
      *
+     * @param The file to get the Symlink for. (must have absolute path)
      * @return <code>String</code> a String that represent the symlink for a specified file or
-     * an empty string if no symlink exists.
+     *         an empty string if no symlink exists.
      */
     public static String getSymlink(File file) {
-    	RootTools.log("Looking for Symlink for " + file.toString());
-    	if (file.exists())
-    	{
-    		RootTools.log("File exists");
-    		
-    		try 
-    		{
-				List<String> results = sendShell("ls -l " + file);
-				String[] symlink = results.get(0).split(" ");
-				if (symlink[symlink.length - 2].equals("->"))
-				{
-					RootTools.log("Symlink found.");
-					return symlink[symlink.length - 1];
-				}
-			}
-    		catch (Exception e) {}
-    	}
+        RootTools.log("Looking for Symlink for " + file.toString());
+        if (file.exists()) {
+            RootTools.log("File exists");
 
-    	RootTools.log("Symlink not found");
-    	return "";
+            try {
+                List<String> results = sendShell("ls -l " + file);
+                String[] symlink = results.get(0).split(" ");
+                if (symlink[symlink.length - 2].equals("->")) {
+                    RootTools.log("Symlink found.");
+                    return symlink[symlink.length - 1];
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        RootTools.log("Symlink not found");
+        return "";
     }
-    
+
     //------------------
     //# Public Methods #
     //------------------
@@ -207,7 +202,7 @@ public class RootTools {
     }
 
     /**
-     * @return  <code>true</code> if su was found.
+     * @return <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
         return findBinary("su");
@@ -215,7 +210,6 @@ public class RootTools {
 
     /**
      * @return <code>true</code> if BusyBox was found
-     * 
      * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
      */
     @Deprecated
@@ -224,112 +218,91 @@ public class RootTools {
     }
 
     /**
-     * @return  <code>true</code> if BusyBox was found.
+     * @return <code>true</code> if BusyBox was found.
      */
     public static boolean isBusyboxAvailable() {
         return findBinary("busybox");
     }
 
     /**
-     * 
      * @param binaryName String that represent the binary to find.
-     * 
-     * @return  <code>true</code> if the specified binary was found.
-     * Also, the path the binary was found at can be retrieved via the 
-     * variable lastFoundBinaryPath, if the binary was found in more than
-     * one location this will contain all of these locations.
-     * 
+     * @return <code>true</code> if the specified binary was found.
+     *         Also, the path the binary was found at can be retrieved via the
+     *         variable lastFoundBinaryPath, if the binary was found in more than
+     *         one location this will contain all of these locations.
      */
     public static boolean findBinary(String binaryName) {
-    	
-    	boolean found = false;
-    	lastFoundBinaryPaths.clear();
-        
-    	RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
-        try 
-        {
-            for(String paths : getPath()) {
+
+        boolean found = false;
+        lastFoundBinaryPaths.clear();
+
+        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
+        try {
+            for (String paths : getPath()) {
                 File file = new File(paths + "/" + binaryName);
                 if (file.exists()) {
                     log(binaryName + " was found here: " + paths);
                     lastFoundBinaryPaths.add(paths);
                     found = true;
-                }
-                else
-                {
-                	log(binaryName + " was NOT found here: " + paths);
+                } else {
+                    log(binaryName + " was NOT found here: " + paths);
                 }
             }
-        } 
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             RootTools.log(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
-            if (debugMode) 
-            {
+            if (debugMode) {
                 e.printStackTrace();
             }
         }
-        
-        if (!found)
-        {
-	        RootTools.log(InternalVariables.TAG, "Trying second method");
-	        RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
-	        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-	                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
-	        for (String where : places) {
-	            File file = new File(where + binaryName);
-	            if (file.exists()) {
-	                log(binaryName + " was found here: " + where);
-	                lastFoundBinaryPaths.add(where);
-	                found = true;
-	            }
-	            else
-	            {
-	            	log(binaryName + " was NOT found here: " + where);
-	            }
-	        }
+
+        if (!found) {
+            RootTools.log(InternalVariables.TAG, "Trying second method");
+            RootTools.log(InternalVariables.TAG, "Checking for " + binaryName);
+            String[] places = {"/sbin/", "/system/bin/", "/system/xbin/",
+                    "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/"};
+            for (String where : places) {
+                File file = new File(where + binaryName);
+                if (file.exists()) {
+                    log(binaryName + " was found here: " + where);
+                    lastFoundBinaryPaths.add(where);
+                    found = true;
+                } else {
+                    log(binaryName + " was NOT found here: " + where);
+                }
+            }
         }
-        
+
         return found;
     }
 
-    
+
     /**
-     * 
      * @param file String that represent the file, including the full
-     * path to the file and its name.
-     * 
+     *             path to the file and its name.
      * @return An <code>int</code> detailing the permissions of the file
-     * or -1 if the file could not be found or permissions couldn't be determined.
-     * 
+     *         or -1 if the file could not be found or permissions couldn't be determined.
      */
     public static int getFilePermissions(String file) {
         RootTools.log(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
         if (f.exists()) {
-            log(file + " was found." );
-            try 
-            {
-                for (String line : sendShell("stat -c %a " + file))
-                {
+            log(file + " was found.");
+            try {
+                for (String line : sendShell("stat -c %a " + file)) {
                     int permissions = -1;
-                    try 
-                    {
-                            permissions = Integer.parseInt(line);
-                            return permissions;
+                    try {
+                        permissions = Integer.parseInt(line);
+                        return permissions;
+                    } catch (Exception e) {
                     }
-                    catch (Exception e)
-                    {}
-                }                               
+                }
             } catch (Exception e) {
                 log(e.getMessage());
                 return -1;
             }
-            
+
             return -1;
-        }
-        else
-        {
+        } else {
             return -1;
         }
     }
@@ -360,41 +333,35 @@ public class RootTools {
      * @throws Exception if we cannot return the applets available.
      */
     public static List<String> getBusyBoxApplets() throws Exception {
-    	List<String> commands = sendShell("busybox --list");
+        List<String> commands = sendShell("busybox --list");
         if (commands != null) {
             return commands;
         } else {
             throw new Exception();
         }
     }
-    
+
     /**
      * This will let you know if an applet is available from BusyBox
      * <p/>
      *
      * @param <code>String</code> The applet to check for.
-     * 
      * @return <code>true</code> if applet is available, false otherwise.
      */
     public static boolean isAppletAvailable(String Applet) {
-    	try
-    	{
-	    	for(String applet : getBusyBoxApplets())
-	    	{
-	    		if (applet.equals(Applet))
-	    		{
-	    			return true;
-	    		}
-	    	}
-	    	return false;
-    	}
-    	catch (Exception e)
-    	{
-    		RootTools.log(e.toString());
-    		return false;
-    	}
+        try {
+            for (String applet : getBusyBoxApplets()) {
+                if (applet.equals(Applet)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            RootTools.log(e.toString());
+            return false;
+        }
     }
-    
+
     /**
      * @return <code>true</code> if your app has been given root access.
      * @deprecated As of release 0.7, replaced by {@link #isAccessGiven()}
@@ -513,8 +480,8 @@ public class RootTools {
      * This is typically useful if you provide your own C- or C++-based binary.
      * This binary can then be executed using sendShell() and its full path.
      *
-     * @param context  the current activity's <code>Context</code>
-     * @param sourceId resource id; typically <code>R.raw.id</code>
+     * @param context    the current activity's <code>Context</code>
+     * @param sourceId   resource id; typically <code>R.raw.id</code>
      * @param binaryName destination file name; appended to /data/data/app.package/files/
      * @return a <code>boolean</code> which indicates whether or not we were
      *         able to create the new file.
@@ -522,24 +489,24 @@ public class RootTools {
     public static boolean installBinary(Context context, int sourceId, String binaryName) {
         return installBinary(context, sourceId, binaryName, "700");
     }
-    
+
     /**
      * Executes binary in a separated process. Before using this method, the binary has to be installed
      * in /data/data/app.package/files/ using the installBinary method.
-     * 
-     * @param context the current activity's <code>Context</code>
+     *
+     * @param context    the current activity's <code>Context</code>
      * @param binaryName name of installed binary
-     * @param parameter parameter to append to binary like "-vxf"
+     * @param parameter  parameter to append to binary like "-vxf"
      */
     public static void runBinary(Context context, String binaryName, String parameter) {
         // executes binary as separated thread
         Runner runner = new Runner(context, binaryName, parameter);
         runner.start();
     }
-    
+
     /**
      * This method can be used to kill a running process
-     * 
+     *
      * @param processName name of process to kill
      * @return <code>true</code> if process was found and killed successfully
      */
@@ -556,10 +523,10 @@ public class RootTools {
             return false;
         }
     }
-    
+
     /**
      * This method can be used to to check if a process is running
-     * 
+     *
      * @param processName name of process to check
      * @return <code>true</code> if process was found
      */
@@ -574,7 +541,7 @@ public class RootTools {
             return false;
         }
     }
-    
+
     /**
      * This restarts only Android OS without rebooting the whole device.
      * This does NOT work on all devices.
@@ -602,9 +569,9 @@ public class RootTools {
      */
     public static List<String> sendShell(String[] commands, int sleepTime, Result result)
             throws IOException, InterruptedException, RootToolsException {
-    	return sendShell(commands, sleepTime, result, true);
+        return sendShell(commands, sleepTime, result, true);
     }
-    
+
     /**
      * Sends several shell command as su (attempts to)
      *

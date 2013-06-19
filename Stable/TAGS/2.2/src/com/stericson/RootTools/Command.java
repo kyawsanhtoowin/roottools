@@ -32,67 +32,66 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public abstract class Command {
-	final String command[];
-	boolean finished = false;
-	int exitCode;
-	int id;
+    final String command[];
+    boolean finished = false;
+    int exitCode;
+    int id;
 
-	public Command(int id, String... command) {
-		this.command = command;
-		this.id = id;
-	}
-	
-	public String getCommand() {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < command.length; i++) {
-			sb.append(command[i]);
-			sb.append('\n');
-		}
-		RootTools.log("Sending command(s): " + sb.toString());
-		return sb.toString();
-	}
+    public Command(int id, String... command) {
+        this.command = command;
+        this.id = id;
+    }
 
-	public void writeCommand(OutputStream out) throws IOException {
-		out.write(getCommand().getBytes());
-	}
+    public String getCommand() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < command.length; i++) {
+            sb.append(command[i]);
+            sb.append('\n');
+        }
+        RootTools.log("Sending command(s): " + sb.toString());
+        return sb.toString();
+    }
 
-	public abstract void output(int id, String line);
-	
-	public void commandFinished(int id)
-	{
-		RootTools.log("Command " + id + "finished.");
-	}
+    public void writeCommand(OutputStream out) throws IOException {
+        out.write(getCommand().getBytes());
+    }
 
-	public void exitCode(int code) {
-		synchronized (this) {
-			exitCode = code;
-			finished = true;
-			commandFinished(id);
-			this.notifyAll();
-		}
-	}
-	
-	public void terminated() {
-		exitCode(-1);
-		RootTools.log(getCommand() + " did not finish.");
-	}
-	
-	// waits for this command to finish and returns the exit code
-	public void waitForFinish() throws InterruptedException {
-		synchronized (this) {
-			while (!finished) {
-				this.wait();
-			}
-		}
-	}
-	
-	// waits for this command to finish and returns the exit code
-	public int exitCode() throws InterruptedException {
-		synchronized (this) {
-			while (!finished) {
-				this.wait();
-			}
-		}
-		return exitCode;
-	}
+    public abstract void output(int id, String line);
+
+    public void commandFinished(int id) {
+        RootTools.log("Command " + id + "finished.");
+    }
+
+    public void exitCode(int code) {
+        synchronized (this) {
+            exitCode = code;
+            finished = true;
+            commandFinished(id);
+            this.notifyAll();
+        }
+    }
+
+    public void terminated() {
+        exitCode(-1);
+        RootTools.log(getCommand() + " did not finish.");
+    }
+
+    // waits for this command to finish and returns the exit code
+    public void waitForFinish() throws InterruptedException {
+        synchronized (this) {
+            while (!finished) {
+                this.wait();
+            }
+        }
+    }
+
+    // waits for this command to finish and returns the exit code
+    public int exitCode() throws InterruptedException {
+        synchronized (this) {
+            while (!finished) {
+                this.wait();
+            }
+        }
+        return exitCode;
+    }
 }

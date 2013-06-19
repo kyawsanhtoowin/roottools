@@ -55,9 +55,10 @@ class Runner extends Thread {
         }
         if (privateFilesPath != null) {
             try {
-            	new InternalMethods().doExec(
-				        new String[] { privateFilesPath + "/" + binaryName + " " + parameter }, -1);
-			} catch (TimeoutException e) {}
+                new InternalMethods().doExec(
+                        new String[]{privateFilesPath + "/" + binaryName + " " + parameter}, -1);
+            } catch (TimeoutException e) {
+            }
         }
     }
 

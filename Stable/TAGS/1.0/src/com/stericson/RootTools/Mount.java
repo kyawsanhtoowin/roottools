@@ -15,11 +15,11 @@ public class Mount {
         this.device = device;
         this.mountPoint = path;
         this.type = type;
-        this.flags = new HashSet<String>( Arrays.asList(flagsStr.split(",")));
+        this.flags = new HashSet<String>(Arrays.asList(flagsStr.split(",")));
     }
 
     @Override
     public String toString() {
-        return String.format( "%s on %s type %s %s", device, mountPoint, type, flags );
+        return String.format("%s on %s type %s %s", device, mountPoint, type, flags);
     }
 }
