@@ -150,7 +150,7 @@ public class RootTools {
     }
 
     /**
-     * @return  <code>true</code> if su was found.
+     * @return <code>true</code> if su was found.
      */
     public static boolean isRootAvailable() {
         return findBinary("su");
@@ -158,7 +158,6 @@ public class RootTools {
 
     /**
      * @return <code>true</code> if BusyBox was found
-     * 
      * @deprecated As of release 0.7, replaced by {@link #isBusyboxAvailable()}
      */
     @Deprecated
@@ -167,24 +166,20 @@ public class RootTools {
     }
 
     /**
-     * @return  <code>true</code> if BusyBox was found.
+     * @return <code>true</code> if BusyBox was found.
      */
     public static boolean isBusyboxAvailable() {
         return findBinary("busybox");
     }
 
     /**
-     * 
      * @param binaryName String that represent the binary to find.
-     * 
-     * @return  <code>true</code> if the specified binary was found.
-     * 
+     * @return <code>true</code> if the specified binary was found.
      */
     public static boolean findBinary(String binaryName) {
         Log.i(InternalVariables.TAG, "Checking for " + binaryName);
-        try 
-        {
-            for(String paths : getPath()) {
+        try {
+            for (String paths : getPath()) {
                 File file = new File(paths + "/" + binaryName);
                 if (file.exists()) {
                     log(binaryName + " was found here: " + paths);
@@ -192,17 +187,17 @@ public class RootTools {
                 }
                 log(binaryName + " was NOT found here: " + paths);
             }
-        }  catch (Exception e) {
+        } catch (Exception e) {
             Log.i(InternalVariables.TAG, binaryName + " was not found, more information MAY be available with Debugging on.");
             if (debugMode) {
                 e.printStackTrace();
+            }
         }
-    }
-        
+
         Log.i(InternalVariables.TAG, "Trying second method");
         Log.i(InternalVariables.TAG, "Checking for " + binaryName);
-        String[] places = { "/sbin/", "/system/bin/", "/system/xbin/",
-                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/" };
+        String[] places = {"/sbin/", "/system/bin/", "/system/xbin/",
+                "/data/local/xbin/", "/data/local/bin/", "/system/sd/xbin/"};
         for (String where : places) {
             File file = new File(where + binaryName);
             if (file.exists()) {
@@ -214,43 +209,34 @@ public class RootTools {
         return false;
     }
 
-    
+
     /**
-     * 
      * @param file String that represent the file, including the full
-     * path to the file and its name.
-     * 
+     *             path to the file and its name.
      * @return An <code>int</code> detailing the permissions of the file
-     * or -1 if the file could not be found or permissions couldn't be determined.
-     * 
+     *         or -1 if the file could not be found or permissions couldn't be determined.
      */
     public static int getFilePermissions(String file) {
         Log.i(InternalVariables.TAG, "Checking permissions for " + file);
         File f = new File(file);
         if (f.exists()) {
-            log(file + " was found." );
-            try 
-            {
-                for (String line : sendShell("stat -c %a " + file))
-                {
+            log(file + " was found.");
+            try {
+                for (String line : sendShell("stat -c %a " + file)) {
                     int permissions = -1;
-                    try 
-                    {
-                            permissions = Integer.parseInt(line);
-                            return permissions;
+                    try {
+                        permissions = Integer.parseInt(line);
+                        return permissions;
+                    } catch (Exception e) {
                     }
-                    catch (Exception e)
-                    {}
-                }                               
+                }
             } catch (Exception e) {
                 log(e.getMessage());
                 return -1;
             }
-            
+
             return -1;
-        }
-        else
-        {
+        } else {
             return -1;
         }
     }
@@ -390,8 +376,8 @@ public class RootTools {
      * This is typically useful if you provide your own C- or C++-based binary.
      * This binary can then be executed using sendShell() and its full path.
      *
-     * @param context  the current activity's <code>Context</code>
-     * @param sourceId resource id; typically <code>R.raw.id</code>
+     * @param context    the current activity's <code>Context</code>
+     * @param sourceId   resource id; typically <code>R.raw.id</code>
      * @param binaryName destination file name; appended to /data/data/app.package/files/
      * @return a <code>boolean</code> which indicates whether or not we were
      *         able to create the new file.
@@ -399,24 +385,24 @@ public class RootTools {
     public static boolean installBinary(Context context, int sourceId, String binaryName) {
         return installBinary(context, sourceId, binaryName, "700");
     }
-    
+
     /**
      * Executes binary in a separated process. Before using this method, the binary has to be installed
      * in /data/data/app.package/files/ using the installBinary method.
-     * 
-     * @param context the current activity's <code>Context</code>
+     *
+     * @param context    the current activity's <code>Context</code>
      * @param binaryName name of installed binary
-     * @param parameter parameter to append to binary like "-vxf"
+     * @param parameter  parameter to append to binary like "-vxf"
      */
     public static void runBinary(Context context, String binaryName, String parameter) {
         // executes binary as separated thread
         Runner runner = new Runner(context, binaryName, parameter);
         runner.start();
     }
-    
+
     /**
      * This method can be used to kill a running process
-     * 
+     *
      * @param processName name of process to kill
      * @return <code>true</code> if process was found and killed successfully
      */
@@ -433,10 +419,10 @@ public class RootTools {
             return false;
         }
     }
-    
+
     /**
      * This method can be used to to check if a process is running
-     * 
+     *
      * @param processName name of process to check
      * @return <code>true</code> if process was found
      */
@@ -451,7 +437,7 @@ public class RootTools {
             return false;
         }
     }
-    
+
     /**
      * This restarts only Android OS without rebooting the whole device.
      * This is done by killing the main init process named zygote. Zygote is restarted

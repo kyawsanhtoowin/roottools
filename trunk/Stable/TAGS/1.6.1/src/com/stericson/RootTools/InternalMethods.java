@@ -44,33 +44,29 @@ class InternalMethods {
     //--------------------
 
     protected void doExec(String[] commands, int timeout) throws TimeoutException {
-	
+
         Worker worker = new Worker(commands);
         worker.start();
-        
-        try
-        {
-        	if (timeout == -1)
-        	{
-        		timeout = 300000;
-        	}
-        	
-        	worker.join(timeout);
-        	
-        	//small pause, let things catch up
-			Thread.sleep(RootTools.shellDelay);
-			
+
+        try {
+            if (timeout == -1) {
+                timeout = 300000;
+            }
+
+            worker.join(timeout);
+
+            //small pause, let things catch up
+            Thread.sleep(RootTools.shellDelay);
+
             if (worker.exit != -911)
-              return;
+                return;
             else
-              throw new TimeoutException();
-        } 
-        catch(InterruptedException ex) 
-        {
+                throw new TimeoutException();
+        } catch (InterruptedException ex) {
             worker.interrupt();
             Thread.currentThread().interrupt();
             throw new TimeoutException();
-        } 
+        }
     }
 
     protected boolean returnPath() throws TimeoutException {
@@ -152,228 +148,218 @@ class InternalMethods {
 
     protected Permissions getPermissions(String line) {
 
-    	String[] lineArray = line.split(" ");
-    	String rawPermissions = lineArray[0];
-    	
-    	if (rawPermissions.length() == 10 && (rawPermissions.charAt(0) == '-' || rawPermissions.charAt(0) == 'd'
-    			|| rawPermissions.charAt(0) == 'l') && (rawPermissions.charAt(1) == '-' || rawPermissions.charAt(1) == 'r') 
-    			&& (rawPermissions.charAt(2) == '-' || rawPermissions.charAt(2) == 'w'))
-    	{	
-	    	RootTools.log(rawPermissions);
-	    	
-	    	Permissions permissions = new Permissions();
-	    	
-	    	permissions.setType(rawPermissions.substring(0, 1));
-	
-	    	RootTools.log(permissions.getType());
-	
-	    	permissions.setUserPermissions(rawPermissions.substring(1, 4));
-	    	
-	    	RootTools.log(permissions.getUserPermissions());
-	    	
-	    	permissions.setGroupPermissions(rawPermissions.substring(4, 7));
-	    	
-	    	RootTools.log(permissions.getGroupPermissions());
-	
-	    	permissions.setOtherPermissions(rawPermissions.substring(7, 10));
-	    	
-	    	RootTools.log(permissions.getOtherPermissions());
-	
-	    	
-	    	String finalPermissions;
-	    	finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
-	    	finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
-	    	finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
-	    	
-			permissions.setPermissions(Integer.parseInt(finalPermissions));
-	    	
-	        return permissions;
-    	}
-    	
-    	return null;
+        String[] lineArray = line.split(" ");
+        String rawPermissions = lineArray[0];
+
+        if (rawPermissions.length() == 10 && (rawPermissions.charAt(0) == '-' || rawPermissions.charAt(0) == 'd'
+                || rawPermissions.charAt(0) == 'l') && (rawPermissions.charAt(1) == '-' || rawPermissions.charAt(1) == 'r')
+                && (rawPermissions.charAt(2) == '-' || rawPermissions.charAt(2) == 'w')) {
+            RootTools.log(rawPermissions);
+
+            Permissions permissions = new Permissions();
+
+            permissions.setType(rawPermissions.substring(0, 1));
+
+            RootTools.log(permissions.getType());
+
+            permissions.setUserPermissions(rawPermissions.substring(1, 4));
+
+            RootTools.log(permissions.getUserPermissions());
+
+            permissions.setGroupPermissions(rawPermissions.substring(4, 7));
+
+            RootTools.log(permissions.getGroupPermissions());
+
+            permissions.setOtherPermissions(rawPermissions.substring(7, 10));
+
+            RootTools.log(permissions.getOtherPermissions());
+
+
+            String finalPermissions;
+            finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
+            finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
+            finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
+
+            permissions.setPermissions(Integer.parseInt(finalPermissions));
+
+            return permissions;
+        }
+
+        return null;
     }
-    
-    protected int parsePermissions(String permission)
-    {
-    	int tmp;
-    	if (permission.charAt(0) == 'r')
-    		tmp = 4;
-    	else
-    		tmp = 0;
 
-    	RootTools.log("permission " + tmp);
-    	RootTools.log("character " + permission.charAt(0));
-    	
-    	if (permission.charAt(1) == 'w')
-    		tmp = tmp + 2;
-    	else
-    		tmp = tmp + 0;
+    protected int parsePermissions(String permission) {
+        int tmp;
+        if (permission.charAt(0) == 'r')
+            tmp = 4;
+        else
+            tmp = 0;
 
-    	RootTools.log("permission " + tmp);
-    	RootTools.log("character " + permission.charAt(1));
+        RootTools.log("permission " + tmp);
+        RootTools.log("character " + permission.charAt(0));
 
-    	if (permission.charAt(2) == 'x')
-    		tmp = tmp + 1;
-    	else
-    		tmp = tmp + 0;
+        if (permission.charAt(1) == 'w')
+            tmp = tmp + 2;
+        else
+            tmp = tmp + 0;
 
-    	RootTools.log("permission " + tmp);
-    	RootTools.log("character " + permission.charAt(2));
+        RootTools.log("permission " + tmp);
+        RootTools.log("character " + permission.charAt(1));
 
-    	return tmp;
+        if (permission.charAt(2) == 'x')
+            tmp = tmp + 1;
+        else
+            tmp = tmp + 0;
+
+        RootTools.log("permission " + tmp);
+        RootTools.log("character " + permission.charAt(2));
+
+        return tmp;
     }
 
     /*
      * @return long Size, converted to kilobytes (from xxx or xxxm or xxxk etc.)
      */
     protected long getConvertedSpace(String spaceStr) {
-    	try {
-	        double multiplier = 1.0;
-	        char c;
-	        StringBuffer sb = new StringBuffer();
-	        for (int i = 0; i < spaceStr.length(); i++) {
-	            c = spaceStr.charAt(i);
-	            if (!Character.isDigit(c) && c != '.') {
-	                if (c == 'm' || c == 'M') {
-	                    multiplier = 1024.0;
-	                } else if (c == 'g' || c == 'G') {
-	                    multiplier = 1024.0 * 1024.0;
-	                }
-	                break;
-	            }
-	            sb.append(spaceStr.charAt(i));
-	        }
-	        return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
-    	}
-    	catch (Exception e) 
-    	{
-    		return -1;
-    	}
+        try {
+            double multiplier = 1.0;
+            char c;
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < spaceStr.length(); i++) {
+                c = spaceStr.charAt(i);
+                if (!Character.isDigit(c) && c != '.') {
+                    if (c == 'm' || c == 'M') {
+                        multiplier = 1024.0;
+                    } else if (c == 'g' || c == 'G') {
+                        multiplier = 1024.0 * 1024.0;
+                    }
+                    break;
+                }
+                sb.append(spaceStr.charAt(i));
+            }
+            return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
+        } catch (Exception e) {
+            return -1;
+        }
     }
-    
-    private static class Worker extends Thread 
-    {
-    	private String[] commands;
-    	public int exit = -911;
-	  
-		private Worker(String[] commands) 
-		{
-			this.commands = commands;
-		}
-		public void run() 
-		{
-			Process process = null;
-			DataOutputStream os = null;
-			InputStreamReader osRes = null;
-			InputStreamReader osErr = null;
-		    try 
-		    { 
-		    	Runtime.getRuntime().gc();
-				process = Runtime.getRuntime().exec("su");
-				os = new DataOutputStream(process.getOutputStream());
-				osRes = new InputStreamReader(process.getInputStream());
-				osErr = new InputStreamReader(process.getErrorStream());
-				BufferedReader reader = new BufferedReader(osRes);
-			    BufferedReader reader_err = new BufferedReader(osErr);
 
-	            // Doing Stuff ;)
-	            for (String single : commands) {
-	            	RootTools.log("Shell command: " + single);
-	                os.writeBytes(single + "\n");
-	                os.flush();
-	            }
+    private static class Worker extends Thread {
+        private String[] commands;
+        public int exit = -911;
+
+        private Worker(String[] commands) {
+            this.commands = commands;
+        }
+
+        public void run() {
+            Process process = null;
+            DataOutputStream os = null;
+            InputStreamReader osRes = null;
+            InputStreamReader osErr = null;
+            try {
+                Runtime.getRuntime().gc();
+                process = Runtime.getRuntime().exec("su");
+                os = new DataOutputStream(process.getOutputStream());
+                osRes = new InputStreamReader(process.getInputStream());
+                osErr = new InputStreamReader(process.getErrorStream());
+                BufferedReader reader = new BufferedReader(osRes);
+                BufferedReader reader_err = new BufferedReader(osErr);
+
+                // Doing Stuff ;)
+                for (String single : commands) {
+                    RootTools.log("Shell command: " + single);
+                    os.writeBytes(single + "\n");
+                    os.flush();
+                }
 
 
-	            os.writeBytes("exit \n");
-	            os.flush();
+                os.writeBytes("exit \n");
+                os.flush();
 
-	            String line = reader.readLine();
-	            String line_err = reader_err.readLine();
+                String line = reader.readLine();
+                String line_err = reader_err.readLine();
 
-	            while (line != null) {
-	                if (commands[0].equals("id")) {
-	                    Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
-	                    for (String id : ID) {
-	                        if (id.toLowerCase().contains("uid=0")) {
-	                            InternalVariables.accessGiven = true;
-	                            RootTools.log(InternalVariables.TAG, "Access Given");
-	                            break;
-	                        }
-	                    }
-	                    if (!InternalVariables.accessGiven) {
-	                        RootTools.log(InternalVariables.TAG, "Access Denied?");
-	                    }
-	                }
-	                if (commands[0].startsWith("df")) {
-	                    if (line.contains(commands[0].substring(2, commands[0].length()).trim())) {
-	                        InternalVariables.space = line.split(" ");
-	                    }
-	                }
-	                if (commands[0].equals("busybox")) {
-	                    if (line.startsWith("BusyBox")) {
-	                        String[] temp = line.split(" ");
-	                        InternalVariables.busyboxVersion = temp[1];
-	                    }
-	                }
-	                if (commands[0].startsWith("busybox pidof")) {
-	                    if (!line.equals("")) {
-	                        RootTools.log("PID: " + line);
-	                        InternalVariables.pid = line;
-	                    }
-	                }
+                while (line != null) {
+                    if (commands[0].equals("id")) {
+                        Set<String> ID = new HashSet<String>(Arrays.asList(line.split(" ")));
+                        for (String id : ID) {
+                            if (id.toLowerCase().contains("uid=0")) {
+                                InternalVariables.accessGiven = true;
+                                RootTools.log(InternalVariables.TAG, "Access Given");
+                                break;
+                            }
+                        }
+                        if (!InternalVariables.accessGiven) {
+                            RootTools.log(InternalVariables.TAG, "Access Denied?");
+                        }
+                    }
+                    if (commands[0].startsWith("df")) {
+                        if (line.contains(commands[0].substring(2, commands[0].length()).trim())) {
+                            InternalVariables.space = line.split(" ");
+                        }
+                    }
+                    if (commands[0].equals("busybox")) {
+                        if (line.startsWith("BusyBox")) {
+                            String[] temp = line.split(" ");
+                            InternalVariables.busyboxVersion = temp[1];
+                        }
+                    }
+                    if (commands[0].startsWith("busybox pidof")) {
+                        if (!line.equals("")) {
+                            RootTools.log("PID: " + line);
+                            InternalVariables.pid = line;
+                        }
+                    }
 
-	                RootTools.log(line);
+                    RootTools.log(line);
 
-	                line = reader.readLine();
-	            }
+                    line = reader.readLine();
+                }
 
-	            while (line_err != null) {
+                while (line_err != null) {
 
-	                RootTools.log(line_err);
+                    RootTools.log(line_err);
 
-	                line_err = reader_err.readLine();
-	            }
+                    line_err = reader_err.readLine();
+                }
 
-		    	exit = process.waitFor();
-		    }
-		    catch (InterruptedException ignore) 
-		    {
-		    	return;
-		    }
-		    catch (Exception e) {
-	            if (RootTools.debugMode) {
-	                RootTools.log("Error: " + e.getMessage());
-	                e.printStackTrace();
-	            }
-	        } finally {
+                exit = process.waitFor();
+            } catch (InterruptedException ignore) {
+                return;
+            } catch (Exception e) {
+                if (RootTools.debugMode) {
+                    RootTools.log("Error: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } finally {
 
-	        	if (process != null)
-	        	{
-	        		try {
-	        			//if this fails, ignore it and dont crash.
-	        			process.destroy();
-	        		} catch (Exception e) {}
-	        		process = null;
-	        	}
-                
-	            try {
-	            	if (os != null) {
-	                	os.flush();
-	                    os.close();
-	                }
-	                if (osRes != null) {
-	                    osRes.close();
-	                }
-	                if (osErr != null) {
-	                    osErr.close();
-	                }
-	            } catch (Exception e) {
-	                if (RootTools.debugMode) {
-	                    RootTools.log("Error: " + e.getMessage());
-	                    e.printStackTrace();
-	                }
-	            }
-	        }
-		}
+                if (process != null) {
+                    try {
+                        //if this fails, ignore it and dont crash.
+                        process.destroy();
+                    } catch (Exception e) {
+                    }
+                    process = null;
+                }
+
+                try {
+                    if (os != null) {
+                        os.flush();
+                        os.close();
+                    }
+                    if (osRes != null) {
+                        osRes.close();
+                    }
+                    if (osErr != null) {
+                        osErr.close();
+                    }
+                } catch (Exception e) {
+                    if (RootTools.debugMode) {
+                        RootTools.log("Error: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 }

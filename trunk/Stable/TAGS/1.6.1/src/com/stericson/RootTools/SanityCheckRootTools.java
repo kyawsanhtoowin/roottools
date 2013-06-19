@@ -63,14 +63,14 @@ public class SanityCheckRootTools extends Activity {
 
         print("SanityCheckRootTools v " + version + "\n\n");
         try {
-			if (false == RootTools.isAccessGiven()) {
-			    print("ERROR: No root access to this device.\n");
-			    return;
-			}
-		} catch (TimeoutException e) {
-		    print("ERROR: could not determine root access to this device.\n");
-		    return;
-		}
+            if (false == RootTools.isAccessGiven()) {
+                print("ERROR: No root access to this device.\n");
+                return;
+            }
+        } catch (TimeoutException e) {
+            print("ERROR: could not determine root access to this device.\n");
+            return;
+        }
 
         // Display infinite progress bar
         mPDialog = new ProgressDialog(this);
@@ -132,7 +132,7 @@ public class SanityCheckRootTools extends Activity {
             } catch (TimeoutException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
                 return;
-			}
+            }
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() w/ callbacks");
             try {
@@ -154,10 +154,10 @@ public class SanityCheckRootTools extends Activity {
                         visualUpdate(TestHandler.ACTION_DISPLAY, "------\nDone.\n");
                     }
 
-					@Override
-					public void processError(String line) throws Exception {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
-					}
+                    @Override
+                    public void processError(String line) throws Exception {
+                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
+                    }
                 };
                 RootTools.sendShell("ls /", result, InternalVariables.timeout);
                 if (0 != result.getError())
@@ -171,7 +171,7 @@ public class SanityCheckRootTools extends Activity {
             } catch (TimeoutException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
                 return;
-			}
+            }
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing sendShell() for multiple commands");
             try {
@@ -193,10 +193,10 @@ public class SanityCheckRootTools extends Activity {
                         visualUpdate(TestHandler.ACTION_DISPLAY, "------\nDone.\n");
                     }
 
-					@Override
-					public void processError(String line) throws Exception {
-                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");						
-					}
+                    @Override
+                    public void processError(String line) throws Exception {
+                        visualUpdate(TestHandler.ACTION_DISPLAY, line + "\n");
+                    }
 
                 };
                 RootTools.sendShell(
@@ -220,7 +220,7 @@ public class SanityCheckRootTools extends Activity {
             } catch (TimeoutException e) {
                 visualUpdate(TestHandler.ACTION_HIDE, "Timeout.. " + e);
                 return;
-			}
+            }
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "All tests complete.");
             visualUpdate(TestHandler.ACTION_HIDE, null);

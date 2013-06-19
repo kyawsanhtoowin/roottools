@@ -19,26 +19,21 @@ public class Executer {
      * Sends several shell command as su (attempts to)
      *
      * @param commands  array of commands to send to the shell
-     *
      * @param sleepTime time to sleep between each command, delay.
-     *
      * @param result    injected result object that implements the Result class
-     *
-     * @return          a <code>LinkedList</code> containing each line that was returned
-     *                  by the shell after executing or while trying to execute the given commands.
-     *                  You must iterate over this list, it does not allow random access,
-     *                  so no specifying an index of an item you want,
-     *                  not like you're going to know that anyways.
-     *
+     * @return a <code>LinkedList</code> containing each line that was returned
+     *         by the shell after executing or while trying to execute the given commands.
+     *         You must iterate over this list, it does not allow random access,
+     *         so no specifying an index of an item you want,
+     *         not like you're going to know that anyways.
      * @throws InterruptedException
-     *
      * @throws IOException
      */
     public List<String> sendShell(String[] commands, int sleepTime, IResult result)
             throws IOException, InterruptedException, RootToolsException {
-        Log.i(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length>1?"s":""));
+        Log.i(InternalVariables.TAG, "Sending " + commands.length + " shell command" + (commands.length > 1 ? "s" : ""));
         List<String> response = null;
-        if(null == result) {
+        if (null == result) {
             response = new LinkedList<String>();
         }
 
@@ -48,7 +43,7 @@ public class Executer {
 
         try {
             process = Runtime.getRuntime().exec("su");
-            if(null != result) {
+            if (null != result) {
                 result.setProcess(process);
             }
             os = new DataOutputStream(process.getOutputStream());
@@ -67,7 +62,7 @@ public class Executer {
             String line = reader.readLine();
 
             while (line != null) {
-                if(null == result) {
+                if (null == result) {
                     response.add(line);
                 } else {
                     result.process(line);
@@ -75,15 +70,13 @@ public class Executer {
                 RootTools.log(line);
                 line = reader.readLine();
             }
-        }
-        catch (Exception ex) {
-            if(null != result) {
+        } catch (Exception ex) {
+            if (null != result) {
                 result.onFailure(ex);
             }
-        }
-        finally {
+        } finally {
             int diag = process.waitFor();
-            if(null != result) {
+            if (null != result) {
                 result.onComplete(diag);
             }
 

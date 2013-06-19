@@ -10,7 +10,7 @@ class InternalVariables {
     //----------------------
     //# Internal Variables #
     //----------------------
-	
+
     //Version numbers should be maintained here.
     protected static String TAG = "RootTools v0.9";
     protected static boolean accessGiven = false;

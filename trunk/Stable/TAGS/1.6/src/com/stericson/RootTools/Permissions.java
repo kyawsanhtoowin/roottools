@@ -23,59 +23,49 @@
 package com.stericson.RootTools;
 
 public class Permissions {
-	String type;
-	String user;
-	String group;
-	String other;
-	int permissions;
+    String type;
+    String user;
+    String group;
+    String other;
+    int permissions;
 
-	public String getType()
-	{
-		return type;
-	}
-	
-	public int getPermissions()
-	{
-		return this.permissions;
-	}
-	
-    public String getUserPermissions()
-    {
-    	return this.user;
+    public String getType() {
+        return type;
     }
-    
-    public String getGroupPermissions()
-    {
-    	return this.group;
+
+    public int getPermissions() {
+        return this.permissions;
     }
-    
-    public String getOtherPermissions()
-    {
-    	return this.other;
+
+    public String getUserPermissions() {
+        return this.user;
     }
-    
-    public void setType(String type)
-    {
-    	this.type = type;
+
+    public String getGroupPermissions() {
+        return this.group;
     }
-    
-    public void setPermissions(int permissions)
-    {
-    	this.permissions = permissions;
+
+    public String getOtherPermissions() {
+        return this.other;
     }
-    
-    public void setUserPermissions(String user)
-    {
-    	this.user = user;
+
+    public void setType(String type) {
+        this.type = type;
     }
-    
-    public void setGroupPermissions(String group)
-    {
-    	this.group = group;
+
+    public void setPermissions(int permissions) {
+        this.permissions = permissions;
     }
-    
-    public void setOtherPermissions(String other)
-    {
-    	this.other = other;
+
+    public void setUserPermissions(String user) {
+        this.user = user;
+    }
+
+    public void setGroupPermissions(String group) {
+        this.group = group;
+    }
+
+    public void setOtherPermissions(String other) {
+        this.other = other;
     }
 }

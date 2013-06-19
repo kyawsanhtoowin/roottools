@@ -45,7 +45,7 @@ class InternalMethods {
             if (!tmpDir.exists()) {
                 RootTools.sendShell(new String[]{"mkdir /data/local/tmp"}, 0, InternalVariables.timeout);
             }
-            
+
             InternalVariables.path = new HashSet<String>();
             //Try to read from the file.
             LineNumberReader lnr = null;
@@ -119,102 +119,98 @@ class InternalMethods {
 
     protected Permissions getPermissions(String line) {
 
-    	String[] lineArray = line.split(" ");
-    	String rawPermissions = lineArray[0];
-    	
-    	if (rawPermissions.length() == 10 && (rawPermissions.charAt(0) == '-' || rawPermissions.charAt(0) == 'd'
-    			|| rawPermissions.charAt(0) == 'l') && (rawPermissions.charAt(1) == '-' || rawPermissions.charAt(1) == 'r') 
-    			&& (rawPermissions.charAt(2) == '-' || rawPermissions.charAt(2) == 'w'))
-    	{	
-	    	RootTools.log(rawPermissions);
-	    	
-	    	Permissions permissions = new Permissions();
-	    	
-	    	permissions.setType(rawPermissions.substring(0, 1));
-	
-	    	RootTools.log(permissions.getType());
-	
-	    	permissions.setUserPermissions(rawPermissions.substring(1, 4));
-	    	
-	    	RootTools.log(permissions.getUserPermissions());
-	    	
-	    	permissions.setGroupPermissions(rawPermissions.substring(4, 7));
-	    	
-	    	RootTools.log(permissions.getGroupPermissions());
-	
-	    	permissions.setOtherPermissions(rawPermissions.substring(7, 10));
-	    	
-	    	RootTools.log(permissions.getOtherPermissions());
-	
-	    	
-	    	String finalPermissions;
-	    	finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
-	    	finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
-	    	finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
-	    	
-			permissions.setPermissions(Integer.parseInt(finalPermissions));
-	    	
-	        return permissions;
-    	}
-    	
-    	return null;
+        String[] lineArray = line.split(" ");
+        String rawPermissions = lineArray[0];
+
+        if (rawPermissions.length() == 10 && (rawPermissions.charAt(0) == '-' || rawPermissions.charAt(0) == 'd'
+                || rawPermissions.charAt(0) == 'l') && (rawPermissions.charAt(1) == '-' || rawPermissions.charAt(1) == 'r')
+                && (rawPermissions.charAt(2) == '-' || rawPermissions.charAt(2) == 'w')) {
+            RootTools.log(rawPermissions);
+
+            Permissions permissions = new Permissions();
+
+            permissions.setType(rawPermissions.substring(0, 1));
+
+            RootTools.log(permissions.getType());
+
+            permissions.setUserPermissions(rawPermissions.substring(1, 4));
+
+            RootTools.log(permissions.getUserPermissions());
+
+            permissions.setGroupPermissions(rawPermissions.substring(4, 7));
+
+            RootTools.log(permissions.getGroupPermissions());
+
+            permissions.setOtherPermissions(rawPermissions.substring(7, 10));
+
+            RootTools.log(permissions.getOtherPermissions());
+
+
+            String finalPermissions;
+            finalPermissions = Integer.toString(parsePermissions(permissions.getUserPermissions()));
+            finalPermissions += Integer.toString(parsePermissions(permissions.getGroupPermissions()));
+            finalPermissions += Integer.toString(parsePermissions(permissions.getOtherPermissions()));
+
+            permissions.setPermissions(Integer.parseInt(finalPermissions));
+
+            return permissions;
+        }
+
+        return null;
     }
-    
-    protected int parsePermissions(String permission)
-    {
-    	int tmp;
-    	if (permission.charAt(0) == 'r')
-    		tmp = 4;
-    	else
-    		tmp = 0;
 
-    	RootTools.log("permission " + tmp);
-    	RootTools.log("character " + permission.charAt(0));
-    	
-    	if (permission.charAt(1) == 'w')
-    		tmp = tmp + 2;
-    	else
-    		tmp = tmp + 0;
+    protected int parsePermissions(String permission) {
+        int tmp;
+        if (permission.charAt(0) == 'r')
+            tmp = 4;
+        else
+            tmp = 0;
 
-    	RootTools.log("permission " + tmp);
-    	RootTools.log("character " + permission.charAt(1));
+        RootTools.log("permission " + tmp);
+        RootTools.log("character " + permission.charAt(0));
 
-    	if (permission.charAt(2) == 'x')
-    		tmp = tmp + 1;
-    	else
-    		tmp = tmp + 0;
+        if (permission.charAt(1) == 'w')
+            tmp = tmp + 2;
+        else
+            tmp = tmp + 0;
 
-    	RootTools.log("permission " + tmp);
-    	RootTools.log("character " + permission.charAt(2));
+        RootTools.log("permission " + tmp);
+        RootTools.log("character " + permission.charAt(1));
 
-    	return tmp;
+        if (permission.charAt(2) == 'x')
+            tmp = tmp + 1;
+        else
+            tmp = tmp + 0;
+
+        RootTools.log("permission " + tmp);
+        RootTools.log("character " + permission.charAt(2));
+
+        return tmp;
     }
 
     /*
      * @return long Size, converted to kilobytes (from xxx or xxxm or xxxk etc.)
      */
     protected long getConvertedSpace(String spaceStr) {
-    	try {
-	        double multiplier = 1.0;
-	        char c;
-	        StringBuffer sb = new StringBuffer();
-	        for (int i = 0; i < spaceStr.length(); i++) {
-	            c = spaceStr.charAt(i);
-	            if (!Character.isDigit(c) && c != '.') {
-	                if (c == 'm' || c == 'M') {
-	                    multiplier = 1024.0;
-	                } else if (c == 'g' || c == 'G') {
-	                    multiplier = 1024.0 * 1024.0;
-	                }
-	                break;
-	            }
-	            sb.append(spaceStr.charAt(i));
-	        }
-	        return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
-    	}
-    	catch (Exception e) 
-    	{
-    		return -1;
-    	}
+        try {
+            double multiplier = 1.0;
+            char c;
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < spaceStr.length(); i++) {
+                c = spaceStr.charAt(i);
+                if (!Character.isDigit(c) && c != '.') {
+                    if (c == 'm' || c == 'M') {
+                        multiplier = 1024.0;
+                    } else if (c == 'g' || c == 'G') {
+                        multiplier = 1024.0 * 1024.0;
+                    }
+                    break;
+                }
+                sb.append(spaceStr.charAt(i));
+            }
+            return (long) Math.ceil(Double.valueOf(sb.toString()) * multiplier);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 }
