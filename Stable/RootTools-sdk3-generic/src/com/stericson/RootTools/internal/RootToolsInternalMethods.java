@@ -863,8 +863,17 @@ public final class RootToolsInternalMethods {
      * @throws Exception if we cannot return the mount points.
      */
     public ArrayList<Mount> getMounts() throws Exception {
+
+        Shell shell = RootTools.getShell(true);
+
+        CommandCapture cmd = new CommandCapture(0,
+                "cat /proc/mounts > /data/local/RootToolsMounts",
+                "chmod 0777 /data/local/RootToolsMounts");
+        shell.add(cmd);
+        cmd.waitForFinish();
+
         LineNumberReader lnr = null;
-        lnr = new LineNumberReader(new FileReader("/proc/mounts"));
+        lnr = new LineNumberReader(new FileReader("/data/local/RootToolsMounts"));
         String line;
         ArrayList<Mount> mounts = new ArrayList<Mount>();
         while ((line = lnr.readLine()) != null) {
