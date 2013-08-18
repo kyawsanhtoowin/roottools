@@ -972,9 +972,22 @@ public final class RootToolsInternalMethods {
      */
     public String getMountedAs(String path) throws Exception {
         InternalVariables.mounts = getMounts();
+        String mp;
         if (InternalVariables.mounts != null) {
             for (Mount mount : InternalVariables.mounts) {
-                if (path.contains(mount.getMountPoint().getAbsolutePath())) {
+
+                mp = mount.getMountPoint().getAbsolutePath();
+
+                if (mp.equals("/")) {
+                    if (path.equals("/")) {
+                        return (String) mount.getFlags().toArray()[0];
+                    }
+                    else {
+                        continue;
+                    }
+                }
+
+                if (path.equals(mp) || path.startsWith(mp + "/")) {
                     RootTools.log((String) mount.getFlags().toArray()[0]);
                     return (String) mount.getFlags().toArray()[0];
                 }
