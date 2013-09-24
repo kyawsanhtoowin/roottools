@@ -128,8 +128,10 @@ class Installer {
             } finally {
                 if (oss != null) {
                     try {
+                    	oss.flush();
+                    	oss.getFD().sync();
                         oss.close();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                     }
                 }
             }
