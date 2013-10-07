@@ -85,6 +85,14 @@ public class SanityCheckRootTools extends Activity {
 
         print("SanityCheckRootTools v " + version + "\n\n");
 
+        if(RootTools.isRootAvailable()) {
+            print("Root found.\n");
+        }
+        else
+        {
+            print("Root not found");
+        }
+
         try {
             Shell.startRootShell();
         } catch (IOException e2) {
