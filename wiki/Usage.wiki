@@ -156,7 +156,7 @@ Command command = new Command(0, "echo this is a command", "echo this is another
             (Do something with the output here)
 	}
 };
-RootTools.getShell(true).add(command).waitForFinish();
+RootTools.getShell(true).add(command);
 }}}
 
 = Everything below is Deprecated =
