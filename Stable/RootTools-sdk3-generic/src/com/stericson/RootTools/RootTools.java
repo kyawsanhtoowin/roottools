@@ -23,7 +23,6 @@
 package com.stericson.RootTools;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -38,10 +37,7 @@ import com.stericson.RootTools.containers.Mount;
 import com.stericson.RootTools.containers.Permissions;
 import com.stericson.RootTools.containers.Symlink;
 import com.stericson.RootTools.exceptions.RootDeniedException;
-import com.stericson.RootTools.exceptions.RootToolsException;
 import com.stericson.RootTools.execution.Command;
-import com.stericson.RootTools.execution.Executer;
-import com.stericson.RootTools.execution.IResult;
 import com.stericson.RootTools.execution.Shell;
 import com.stericson.RootTools.internal.Remounter;
 import com.stericson.RootTools.internal.RootToolsInternalMethods;
@@ -83,32 +79,25 @@ public final class RootTools {
 
     public static boolean debugMode = false;
     public static List<String> lastFoundBinaryPaths = new ArrayList<String>();
-    public static int lastExitCode;
     public static String utilPath;
 
     /**
-     * You can use this to force sendshell to use a shell other than the deafult.
+     * Setting this to false will disable the handler that is used
+     * by default for the 3 callback methods for Command.
+     *
+     * By disabling this all callbacks will be called from a thread other than
+     * the main UI thread.
      */
-    public static String customShell = "";
+    public static boolean handlerEnabled = true;
+
 
     /**
-     * Change this to a lower/higher setting to speed up/slow down shell commands if things are
-     * taking too long or you are having constant crashes or timeout exceptions.
+     * Setting this will change the default command timeout.
+     *
+     * The default is 20000ms
      */
-    public static int shellDelay = 0;
+    public static int default_Command_Timeout = 20000;
 
-    /**
-     * Many Functions here use root by default, but there may be times that you do not want them to
-     * use root. This can be useful when running a lot of commands at once. By default, if all of
-     * these functions are requesting root access then superuser will notify the user everytime that
-     * root is requested...this can lead to a flood of toast messages from superuser notifying the
-     * user that root access is being requested.
-     * <p/>
-     * Setting this to false will cause sendShell to not use root by default. So any commands sent
-     * to the shell will not have root access unless specifically directed to obtain root access by
-     * you. Some commands will not work properly without root access, so use this with care.
-     */
-    public static boolean useRoot = true;
 
     // ---------------------------
     // # Public Variable Getters #
@@ -184,7 +173,7 @@ public final class RootTools {
      * @param remountAsRw remounts the destination as read/write before writing to it
      * @return true if it was successfully deleted
      */
-    public boolean deleteFileOrDirectory(String target, boolean remountAsRw) {
+    public static boolean deleteFileOrDirectory(String target, boolean remountAsRw) {
         return getInternals().deleteFileOrDirectory(target, remountAsRw);
     }
 
@@ -399,7 +388,7 @@ public final class RootTools {
      * @throws IOException
      */
     public static Shell getShell(boolean root) throws IOException, TimeoutException, RootDeniedException {
-        return RootTools.getShell(root, 10000);
+        return RootTools.getShell(root, 25000);
     }
 
     /**
@@ -504,6 +493,18 @@ public final class RootTools {
      */
     public static boolean installBinary(Context context, int sourceId, String binaryName) {
         return installBinary(context, sourceId, binaryName, "700");
+    }
+
+    /**
+     * This method checks whether a binary is installed.
+     *
+     * @param context    the current activity's <code>Context</code>
+     * @param binaryName binary file name; appended to /data/data/app.package/files/
+     * @return a <code>boolean</code> which indicates whether or not
+     *         the binary already exists.
+     */
+    public static boolean hasBinary(Context context, String binaryName) {
+        return getInternals().isBinaryAvailable(context, binaryName);
     }
 
     /**
@@ -681,176 +682,6 @@ public final class RootTools {
     }
 
     /**
-     * Sends several shell command as su (attempts to)
-     *
-     * @param commands  array of commands to send to the shell
-     * @param sleepTime time to sleep between each command, delay.
-     * @param result    injected result object that implements the Result class
-     * @param timeout   How long to wait before throwing TimeoutException, sometimes when running root
-     *                  commands on certain devices or roms ANR's may occur because a process never
-     *                  returns or readline never returns. This allows you to protect your application
-     *                  from throwing an ANR.
-     *                  <p/>
-     *                  if you pass -1, then the default timeout is 5 minutes.
-     * @return a <code>LinkedList</code> containing each line that was returned by the shell after
-     *         executing or while trying to execute the given commands. You must iterate over this
-     *         list, it does not allow random access, so no specifying an index of an item you want,
-     *         not like you're going to know that anyways.
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws TimeoutException
-     */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result,
-                                         int timeout) throws IOException, RootToolsException, TimeoutException {
-        return sendShell(commands, sleepTime, result, useRoot, timeout);
-    }
-
-    /**
-     * Sends several shell command as su (attempts to) if useRoot is true; as the current user
-     * (app_xxx) otherwise.
-     *
-     * @param commands  array of commands to send to the shell
-     * @param sleepTime time to sleep between each command, delay.
-     * @param result    injected result object that implements the Result class
-     * @param useRoot   whether to use root or not when issuing these commands.
-     * @param timeout   How long to wait before throwing TimeoutException, sometimes when running root
-     *                  commands on certain devices or roms ANR's may occur because a process never
-     *                  returns or readline never returns. This allows you to protect your application
-     *                  from throwing an ANR.
-     *                  <p/>
-     *                  if you pass -1, then the default timeout is 5 minutes.
-     * @return a <code>LinkedList</code> containing each line that was returned by the shell after
-     *         executing or while trying to execute the given commands. You must iterate over this
-     *         list, it does not allow random access, so no specifying an index of an item you want,
-     *         not like you're going to know that anyways.
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws TimeoutException
-     * @deprecated
-     */
-    public static List<String> sendShell(String[] commands, int sleepTime, Result result,
-                                         boolean useRoot, int timeout) throws IOException, RootToolsException, TimeoutException {
-        return new Executer().sendShell(commands, sleepTime, result, useRoot, timeout);
-    }
-
-    /**
-     * Sends several shell command as su, unless useRoot is set to false
-     *
-     * @param commands  array of commands to send to the shell
-     * @param sleepTime time to sleep between each command, delay.
-     * @param timeout   How long to wait before throwing TimeoutException, sometimes when running root
-     *                  commands on certain devices or roms ANR's may occur because a process never
-     *                  returns or readline never returns. This allows you to protect your application
-     *                  from throwing an ANR.
-     *                  <p/>
-     *                  if you pass -1, then the default timeout is 5 minutes.
-     * @return a LinkedList containing each line that was returned by the shell after executing or
-     *         while trying to execute the given commands. You must iterate over this list, it does
-     *         not allow random access, so no specifying an index of an item you want, not like
-     *         you're going to know that anyways.
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws TimeoutException
-     * @deprecated
-     */
-    public static List<String> sendShell(String[] commands, int sleepTime, int timeout)
-            throws IOException, RootToolsException, TimeoutException {
-        return sendShell(commands, sleepTime, null, timeout);
-    }
-
-    /**
-     * Sends one shell command as su, unless useRoot is set to false
-     *
-     * @param command command to send to the shell
-     * @param result  injected result object that implements the Result class
-     * @param timeout How long to wait before throwing TimeoutException, sometimes when running root
-     *                commands on certain devices or roms ANR's may occur because a process never
-     *                returns or readline never returns. This allows you to protect your application
-     *                from throwing an ANR.
-     *                <p/>
-     *                if you pass -1, then the default timeout is 5 minutes.
-     * @return a <code>LinkedList</code> containing each line that was returned by the shell after
-     *         executing or while trying to execute the given commands. You must iterate over this
-     *         list, it does not allow random access, so no specifying an index of an item you want,
-     *         not like you're going to know that anyways.
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws RootToolsException
-     * @throws TimeoutException
-     * @deprecated
-     */
-    public static List<String> sendShell(String command, Result result, int timeout)
-            throws IOException, RootToolsException, TimeoutException {
-        return sendShell(new String[]{command}, 0, result, timeout);
-    }
-
-    /**
-     * Sends one shell command as su, unless useRoot is set to false
-     *
-     * @param command command to send to the shell
-     * @param timeout How long to wait before throwing TimeoutException, sometimes when running root
-     *                commands on certain devices or roms ANR's may occur because a process never
-     *                returns or readline never returns. This allows you to protect your application
-     *                from throwing an ANR.
-     *                <p/>
-     *                if you pass -1, then the default timeout is 5 minutes.
-     * @return a LinkedList containing each line that was returned by the shell after executing or
-     *         while trying to execute the given commands. You must iterate over this list, it does
-     *         not allow random access, so no specifying an index of an item you want, not like
-     *         you're going to know that anyways.
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws TimeoutException
-     * @deprecated
-     */
-    public static List<String> sendShell(String command, int timeout) throws IOException,
-            RootToolsException, TimeoutException {
-        return sendShell(command, null, timeout);
-    }
-
-    public static abstract class Result implements IResult {
-        private Process process = null;
-        private Serializable data = null;
-        private int error = 0;
-
-        public abstract void process(String line) throws Exception;
-
-        public abstract void processError(String line) throws Exception;
-
-        public abstract void onFailure(Exception ex);
-
-        public abstract void onComplete(int diag);
-
-        public Result setProcess(Process process) {
-            this.process = process;
-            return this;
-        }
-
-        public Process getProcess() {
-            return process;
-        }
-
-        public Result setData(Serializable data) {
-            this.data = data;
-            return this;
-        }
-
-        public Serializable getData() {
-            return data;
-        }
-
-        public Result setError(int error) {
-            this.error = error;
-            return this;
-        }
-
-        public int getError() {
-            return error;
-        }
-    }
-
-
-    /**
      * This method allows you to output debug messages only when debugging is on. This will allow
      * you to add a debug option to your app, which by default can be left off for performance.
      * However, when you need debugging information, a simple switch can enable it and provide you
@@ -899,6 +730,29 @@ public final class RootTools {
      */
     public static void log(String msg, int type, Exception e) {
         log(null, msg, type, e);
+    }
+
+    /**
+     * This method allows you to check whether logging is enabled.
+     * Yes, it has a goofy name, but that's to keep it as short as possible.
+     * After all writing logging calls should be painless.
+     * This method exists to save Android going through the various Java layers
+     * that are traversed any time a string is created (i.e. what you are logging)
+     *
+     * Example usage:
+     * if(islog) {
+     *     StrinbBuilder sb = new StringBuilder();
+     *     // ...
+     *     // build string
+     *     // ...
+     *     log(sb.toString());
+     * }
+     *
+     *
+     * @return true if logging is enabled
+     */
+    public static boolean islog() {
+        return debugMode;
     }
 
     /**
