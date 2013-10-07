@@ -594,38 +594,45 @@ public final class RootToolsInternalMethods {
      *         found at can be retrieved via the variable lastFoundBinaryPath, if the binary was
      *         found in more than one location this will contain all of these locations.
      */
-    public boolean findBinary(String binaryName) {
+    public boolean findBinary(final String binaryName) {
         boolean found = false;
         RootTools.lastFoundBinaryPaths.clear();
 
-        List<String> list = new ArrayList<String>();
+        final List<String> list = new ArrayList<String>();
+        String[] places = {"/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
+                "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/"};
 
         RootTools.log("Checking for " + binaryName);
 
+        //Try to use stat first
         try {
-            Set<String> paths = RootTools.getPath();
-            if (paths.size() > 0) {
-                for (String path : paths) {
-                    if (RootTools.exists(path + "/" + binaryName)) {
-                        RootTools.log(binaryName + " was found here: " + path);
-                        list.add(path);
-                        found = true;
-                    } else {
-                        RootTools.log(binaryName + " was NOT found here: " + path);
+            for(final String path : places) {
+                CommandCapture cc = new CommandCapture(0, false, "stat " + path + binaryName) {
+                    @Override
+                    public void commandOutput(int id, String line) {
+                        if(line.contains("File: ") && line.contains(binaryName)) {
+                            list.add(path);
+
+                            RootTools.log(binaryName + " was found here: " + path);
+                        }
+
+                        RootTools.log(line);
                     }
-                }
+                };
+
+                RootTools.getShell(false).add(cc);
+                commandWait(cc);
+
             }
-        } catch (TimeoutException ex) {
-            RootTools.log("TimeoutException!!!");
+
+            found = !list.isEmpty();
         } catch (Exception e) {
             RootTools.log(binaryName + " was not found, more information MAY be available with Debugging on.");
         }
 
         if (!found) {
             RootTools.log("Trying second method");
-            RootTools.log("Checking for " + binaryName);
-            String[] places = {"/sbin/", "/system/bin/", "/system/xbin/", "/data/local/xbin/",
-                    "/data/local/bin/", "/system/sd/xbin/", "/system/bin/failsafe/", "/data/local/"};
+
             for (String where : places) {
                 if (RootTools.exists(where + binaryName)) {
                     RootTools.log(binaryName + " was found here: " + where);
@@ -637,9 +644,25 @@ public final class RootToolsInternalMethods {
             }
         }
 
-        if (RootTools.debugMode) {
-            for (String path : list) {
-                RootTools.log("Paths: " + path);
+        if(!found) {
+            RootTools.log("Trying third method");
+
+            try {
+                Set<String> paths = RootTools.getPath();
+
+                if (paths != null) {
+                    for (String path : paths) {
+                        if (RootTools.exists(path + "/" + binaryName)) {
+                            RootTools.log(binaryName + " was found here: " + path);
+                            list.add(path);
+                            found = true;
+                        } else {
+                            RootTools.log(binaryName + " was NOT found here: " + path);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                RootTools.log(binaryName + " was not found, more information MAY be available with Debugging on.");
             }
         }
 
@@ -918,6 +941,7 @@ public final class RootToolsInternalMethods {
         Shell shell = RootTools.getShell(true);
 
         CommandCapture cmd = new CommandCapture(0,
+                false,
                 "cat /proc/mounts > /data/local/RootToolsMounts",
                 "chmod 0777 /data/local/RootToolsMounts");
         shell.add(cmd);
