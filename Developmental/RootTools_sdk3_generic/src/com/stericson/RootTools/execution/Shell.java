@@ -416,8 +416,15 @@ public class Shell {
                          * send the output for the implementer to process
                          */
                         command.output(command.id, line);
-                    } else {
-
+                    }
+                    if (pos > 0) {
+                    	/**
+                    	 * token is suffix of output, send output part to implementer
+                    	 */
+                    	command.output(command.id, line.substring(0, pos));
+                    }
+                    if (pos >= 0) {
+                    	line = line.substring(pos);
                         String fields[] = line.split(" ");
 
                         if (fields.length >= 2 && fields[1] != null) {
