@@ -3,6 +3,7 @@
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+        <option name="LIBRARY_PROJECT" value="true" />
         <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
         <resOverlayFolders />
       </configuration>
