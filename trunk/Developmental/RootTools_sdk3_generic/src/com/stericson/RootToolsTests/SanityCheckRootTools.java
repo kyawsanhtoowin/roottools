@@ -23,6 +23,7 @@
 package com.stericson.RootToolsTests;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
@@ -162,7 +163,7 @@ public class SanityCheckRootTools extends Activity {
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ getPath ]\n");
 
             try {
-                Set<String> paths = RootTools.getPath();
+                List<String> paths = RootTools.getPath();
 
                 for(String path : paths)
                 {

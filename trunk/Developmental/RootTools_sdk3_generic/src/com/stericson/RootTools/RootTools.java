@@ -24,6 +24,7 @@ package com.stericson.RootTools;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -337,13 +338,12 @@ public final class RootTools {
     }
 
     /**
-     * This will return the environment variable $PATH
+     * This will return the environment variable PATH
      *
-     * @return <code>Set<String></code> A Set of Strings representing the environment variable $PATH
-     * @throws Exception if we cannot return the $PATH variable
+     * @return <code>List<String></code> A List of Strings representing the environment variable $PATH
      */
-    public static Set<String> getPath() throws Exception {
-        return getInternals().getPath();
+    public static List<String> getPath() {
+        return Arrays.asList(System.getenv("PATH").split(":"));
     }
 
     /**
