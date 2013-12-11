@@ -82,11 +82,15 @@ public final class RootToolsInternalMethods {
 
             InternalVariables.path = new HashSet<String>();
 
-            String mountedas = RootTools.getMountedAs("/");
-            RootTools.remount("/", "rw");
+            /**
+             * Not sure why I put these commented lines in here...should not need them...
+             * Leaving for now just in case it needs to be added back if an issue arises...
+             */
+            //String mountedas = RootTools.getMountedAs("/");
+            //RootTools.remount("/", "rw");
 
-            command = new CommandCapture(0, false, "chmod 0777 /init.rc");
-            Shell.startRootShell().add(command);
+            //command = new CommandCapture(0, false, "chmod 0777 /init.rc");
+            //Shell.startRootShell().add(command);
 
             command = new CommandCapture(0, false,
                     "dd if=/init.rc of=/data/local/tmp/init.rc");
@@ -97,7 +101,7 @@ public final class RootToolsInternalMethods {
             Shell.startRootShell().add(command);
             commandWait(command);
 
-            RootTools.remount("/", mountedas);
+            //RootTools.remount("/", mountedas);
 
             fr = new FileReader("/data/local/tmp/init.rc");
             lnr = new LineNumberReader(fr);
