@@ -65,52 +65,6 @@ public final class RootToolsInternalMethods {
         RootTools.setRim(new RootToolsInternalMethods());
     }
 
-    public boolean returnPath() throws TimeoutException {
-
-        CommandCapture command = null;
-        LineNumberReader lnr = null;
-        FileReader fr = null;
-
-        try {
-            InternalVariables.path = new HashSet<String>();
-
-            command = new CommandCapture(0, false, "echo $PATH") {
-
-                @Override
-                public void commandOutput(int id, String line) {
-                    super.commandOutput(id, line);
-
-                    RootTools.log("$PATH: " + line);
-
-                    int tmp = line.indexOf("/");
-                    InternalVariables.path.addAll(Arrays.asList(line.substring(tmp).split(":")));
-                }
-            };
-
-            RootTools.log("Executing $PATH");
-
-            Shell.startRootShell().add(command);
-            commandWait(command);
-
-            return InternalVariables.path.size() > 0;
-
-        } catch (Exception e) {
-            if (RootTools.debugMode) {
-                RootTools.log("Error: " + e.getMessage());
-                e.printStackTrace();
-            }
-            return false;
-        } finally {
-            try {
-                fr.close();
-            } catch (Exception e) {}
-
-            try {
-                lnr.close();
-            } catch (Exception e) {}
-        }
-    }
-
     public ArrayList<Symlink> getSymLinks() throws IOException {
 
         LineNumberReader lnr = null;
@@ -629,7 +583,7 @@ public final class RootToolsInternalMethods {
             RootTools.log("Trying third method");
 
             try {
-                Set<String> paths = RootTools.getPath();
+                List<String> paths = RootTools.getPath();
 
                 if (paths != null) {
                     for (String path : paths) {
@@ -1001,24 +955,6 @@ public final class RootToolsInternalMethods {
             throw new Exception();
         } else {
             throw new Exception();
-        }
-    }
-
-    /**
-     * This will return the environment variable $PATH
-     *
-     * @return <code>Set<String></code> A Set of Strings representing the environment variable $PATH
-     * @throws Exception if we cannot return the $PATH variable
-     */
-    public Set<String> getPath() throws Exception {
-        if (InternalVariables.path != null) {
-            return InternalVariables.path;
-        } else {
-            if (returnPath()) {
-                return InternalVariables.path;
-            } else {
-                throw new Exception();
-            }
         }
     }
 
