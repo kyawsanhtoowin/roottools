@@ -23,6 +23,7 @@
 package com.stericson.RootToolsTests;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import android.app.Activity;
@@ -156,6 +157,21 @@ public class SanityCheckRootTools extends Activity {
             */
 
             boolean result;
+
+            visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing getPath");
+            visualUpdate(TestHandler.ACTION_DISPLAY, "[ getPath ]\n");
+
+            try {
+                Set<String> paths = RootTools.getPath();
+
+                for(String path : paths)
+                {
+                    visualUpdate(TestHandler.ACTION_DISPLAY,  path + " k\n\n");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             visualUpdate(TestHandler.ACTION_PDISPLAY, "Testing A ton of commands");
             visualUpdate(TestHandler.ACTION_DISPLAY, "[ Ton of Commands ]\n");
