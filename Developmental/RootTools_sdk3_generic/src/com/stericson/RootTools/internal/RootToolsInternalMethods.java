@@ -72,51 +72,28 @@ public final class RootToolsInternalMethods {
         FileReader fr = null;
 
         try {
-            if (!RootTools.exists("/data/local/tmp")) {
-
-                command = new CommandCapture(0, false, "mkdir /data/local/tmp");
-                Shell.startRootShell().add(command);
-                commandWait(command);
-
-            }
-
             InternalVariables.path = new HashSet<String>();
 
-            /**
-             * Not sure why I put these commented lines in here...should not need them...
-             * Leaving for now just in case it needs to be added back if an issue arises...
-             */
-            //String mountedas = RootTools.getMountedAs("/");
-            //RootTools.remount("/", "rw");
+            command = new CommandCapture(0, false, "echo $PATH") {
 
-            //command = new CommandCapture(0, false, "chmod 0777 /init.rc");
-            //Shell.startRootShell().add(command);
+                @Override
+                public void commandOutput(int id, String line) {
+                    super.commandOutput(id, line);
 
-            command = new CommandCapture(0, false,
-                    "dd if=/init.rc of=/data/local/tmp/init.rc");
-            Shell.startRootShell().add(command);
+                    RootTools.log("$PATH: " + line);
 
-            command = new CommandCapture(0, false,
-                    "chmod 0777 /data/local/tmp/init.rc");
+                    int tmp = line.indexOf("/");
+                    InternalVariables.path.addAll(Arrays.asList(line.substring(tmp).split(":")));
+                }
+            };
+
+            RootTools.log("Executing $PATH");
+
             Shell.startRootShell().add(command);
             commandWait(command);
 
-            //RootTools.remount("/", mountedas);
+            return InternalVariables.path.size() > 0;
 
-            fr = new FileReader("/data/local/tmp/init.rc");
-            lnr = new LineNumberReader(fr);
-
-            String line;
-            while ((line = lnr.readLine()) != null) {
-                RootTools.log(line);
-                if (line.contains("export PATH")) {
-                    int tmp = line.indexOf("/");
-                    InternalVariables.path = new HashSet<String>(
-                            Arrays.asList(line.substring(tmp).split(":")));
-                    return true;
-                }
-            }
-            return false;
         } catch (Exception e) {
             if (RootTools.debugMode) {
                 RootTools.log("Error: " + e.getMessage());
